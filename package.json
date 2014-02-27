@@ -25,7 +25,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "gulp"
+    "test": "karma start test/karma.conf.ci.js"
   },
   "devDependencies": {
     "gulp": "~3.5.2",

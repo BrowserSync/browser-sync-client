@@ -61,7 +61,7 @@ describe("Browser Sync INIT", function () {
                 notify: true
             };
             methods.processOptions(scope, options, ghost.utils, ghost.listeners);
-            assert.equal(spy.called, false);
+            assert.equal(spy.called, true);
         });
         it("should NOT create notify element when Disabled", function () {
             var options = {
