@@ -1,0 +1,41 @@
+{
+  "name": "browser-sync-client",
+  "description": "Keep track of items via heartbeats",
+  "version": "0.0.1",
+  "homepage": "https://github.com/shakyshane/browser-sync-client",
+  "author": {
+    "name": "Shane Osbourne",
+    "email": "shane.osbourne8@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shakyshane/browser-sync-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shakyshane/browser-sync-client/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/shakyshane/browser-sync-client/blob/master/LICENSE-MIT"
+    }
+  ],
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "gulp"
+  },
+  "devDependencies": {
+    "gulp": "~3.5.2",
+    "gulp-karma": "0.0.2",
+    "gulp-mocha": "~0.4.1",
+    "gulp-jshint": "~1.4.0",
+    "chai": "~1.9.0",
+    "sinon": "~1.8.2",
+    "karma-mocha": "~0.1.1",
+    "karma-sinon": "~1.0.0"
+  },
+  "keywords": []
+}
