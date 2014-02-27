@@ -1,6 +1,6 @@
 {
   "name": "browser-sync-client",
-  "description": "Keep track of items via heartbeats",
+  "description": "Client-side scripts for BrowserSync",
   "version": "0.0.1",
   "homepage": "https://github.com/shakyshane/browser-sync-client",
   "author": {
