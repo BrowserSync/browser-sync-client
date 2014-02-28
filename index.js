@@ -1,8 +1,8 @@
 var fs = require("fs");
 var path = require("path");
 
-var clientScript = path.resolve("./lib/browser-sync-client.js");
-var shims = path.resolve("./lib/client-shims.js");
+var clientScript = path.resolve(__dirname + "/lib/browser-sync-client.js");
+var shims = path.resolve(__dirname + "/lib/client-shims.js");
 
 module.exports.middleware = function () {
 
