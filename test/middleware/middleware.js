@@ -1,9 +1,8 @@
 var assert = require("chai").assert;
 var middleware = require("../../index.js").middleware;
-var connect = require("connect");
 var http = require("http");
-var request = require('supertest');
-var express = require('express');
+var request = require("supertest");
+var express = require("express");
 var app = express();
 
 app.use("/client", middleware());
@@ -19,8 +18,8 @@ describe("Using the middleware", function () {
 
     it("should return the JS", function (done) {
         request(app)
-            .get('/client')
-            .expect('Content-Type', /text\/javascript/)
+            .get("/client")
+            .expect("Content-Type", /text\/javascript/)
             .expect(200)
             .end(function (err, res) {
                 assert(~res.text.indexOf(string1));

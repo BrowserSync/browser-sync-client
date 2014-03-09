@@ -1,7 +1,7 @@
 {
   "name": "browser-sync-client",
   "description": "Client-side scripts for BrowserSync",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/shakyshane/browser-sync-client",
   "author": {
     "name": "Shane Osbourne",
@@ -25,7 +25,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "karma start test/karma.conf.ci.js"
+    "test": "gulp lint && karma start test/karma.conf.ci.js"
   },
   "devDependencies": {
     "gulp": "~3.5.2",
@@ -35,7 +35,8 @@
     "chai": "~1.9.0",
     "sinon": "~1.8.2",
     "karma-mocha": "~0.1.1",
-    "karma-sinon": "~1.0.0"
+    "karma-sinon": "~1.0.0",
+    "gulp-contribs": "0.0.2"
   },
   "keywords": []
 }

@@ -1,6 +1,7 @@
 var gulp = require("gulp");
 var karma = require('gulp-karma');
 var jshint = require('gulp-jshint');
+var contribs = require('gulp-contribs');
 
 var testFiles = [
     'test/todo.js'
@@ -24,8 +25,15 @@ gulp.task('test:watch', function() {
 });
 
 gulp.task('lint', function () {
-    gulp.src(['test/*.js', 'lib/*'])
+    gulp.src(['test/client-script/*.js', 'lib/*', 'test/middleware/*.js'])
         .pipe(jshint('test/.jshintrc'))
-        .pipe(jshint.reporter('default'))
+        .pipe(jshint.reporter("default"))
+        .pipe(jshint.reporter("fail"))
+});
+
+gulp.task('contribs', function () {
+    gulp.src('README.md')
+        .pipe(contribs())
+        .pipe(gulp.dest("./"))
 });
 gulp.task('default', ["lint", "test"]);
