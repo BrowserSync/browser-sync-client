@@ -18,7 +18,7 @@ module.exports = function (config) {
             "client-script/libs/assert.js",
             "../node_modules/sinon/pkg/sinon.js",
             "fixtures/*.html",
-            "client-script/*Spec.js",
+            "client-script/injector/*.js",
             "../lib/browser-sync-client.js"
         ],
 
