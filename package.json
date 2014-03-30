@@ -38,5 +38,8 @@
     "karma-sinon": "~1.0.0",
     "gulp-contribs": "0.0.2"
   },
-  "keywords": []
+  "keywords": [],
+  "dependencies": {
+    "uglify-js": "^2.4.13"
+  }
 }
