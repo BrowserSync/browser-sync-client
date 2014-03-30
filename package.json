@@ -1,7 +1,7 @@
 {
   "name": "browser-sync-client",
   "description": "Client-side scripts for BrowserSync",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://github.com/shakyshane/browser-sync-client",
   "author": {
     "name": "Shane Osbourne",
@@ -25,7 +25,8 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "gulp"
+    "test": "gulp",
+    "install": "node ./lib/build.js"
   },
   "devDependencies": {
     "gulp": "~3.5.2",
@@ -42,6 +43,9 @@
   },
   "keywords": [],
   "dependencies": {
-    "uglify-js": "^2.4.13"
+    "uglify-js": "^2.4.13",
+    "through2": "^0.4.1",
+    "vinyl": "^0.2.3",
+    "vinyl-fs": "^0.1.2"
   }
 }

@@ -3,25 +3,30 @@
 var fs       = require("fs");
 var path     = require("path");
 
-var script = path.resolve(__dirname + "/lib/browser-sync-client.js");
-var shims  = path.resolve(__dirname + "/lib/client-shims.js");
+var built  = path.resolve(__dirname + "/dist/dist.js");
 
 module.exports.middleware = function () {
 
     return function (options) {
 
-        var jsFile  = fs.readFileSync(script);
-        var jsShims = fs.readFileSync(shims);
-        var result  = jsShims + jsFile;
+        var result;
 
         if (options && options.minify) {
-            var UglifyJS = require("uglify-js");
-            result = UglifyJS.minify(result, {fromString: true});
+            result = fs.readFileSync(built);
+        } else {
+
+            var client = path.resolve(__dirname + "/lib/browser-sync-client.js");
+            var shims  = path.resolve(__dirname + "/lib/client-shims.js");
+
+            var jsFile  = fs.readFileSync(client);
+            var jsShims = fs.readFileSync(shims);
+
+            result  = jsShims + jsFile;
         }
 
         return function (req, res) {
             res.setHeader("Content-Type", "text/javascript");
-            res.end(result.code);
+            res.end(result);
         };
     }
 };
