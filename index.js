@@ -21,7 +21,7 @@ module.exports.middleware = function () {
 
         return function (req, res) {
             res.setHeader("Content-Type", "text/javascript");
-            res.end(result);
+            res.end(result.code);
         };
     }
 };
