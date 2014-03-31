@@ -2,13 +2,9 @@ var UglifyJS    = require("uglify-js");
 var fs          = require("vinyl-fs");
 var through2    = require("through2");
 var File        = require("vinyl");
+var browserify  = require('browserify');
 
-var src = [
-    "lib/client-shims.js",
-    "lib/browser-sync-client.js"
-];
-
-var writer = function () {
+var uglifier = function () {
     var combined = "";
     return through2.obj(function (file, enc, cb) {
         combined += file.toString();
@@ -25,9 +21,8 @@ var writer = function () {
     });
 };
 
-var browserify = require('browserify');
 var b = browserify();
-b.add('../lib/test.js');
+b.add('./lib/index.js');
 b.bundle()
-    .pipe(writer())
+    .pipe(uglifier())
     .pipe(fs.dest("./dist"));
