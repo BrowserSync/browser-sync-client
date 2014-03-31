@@ -1,20 +1,27 @@
+"use strict";
+
 var fs       = require("fs");
 var path     = require("path");
-var UglifyJS = require("uglify-js");
 
-var clientScript = path.resolve(__dirname + "/lib/browser-sync-client.js");
-var shims = path.resolve(__dirname + "/lib/client-shims.js");
+var built  = path.resolve(__dirname + "/dist/dist.js");
 
 module.exports.middleware = function () {
 
     return function (options) {
 
-        var jsFile    = fs.readFileSync(clientScript);
-        var jsShims   = fs.readFileSync(shims);
-        var result    = jsShims + jsFile;
+        var result;
 
         if (options && options.minify) {
-            result    = UglifyJS.minify(jsShims + jsFile, {fromString: true});
+            result = fs.readFileSync(built);
+        } else {
+
+            var client = path.resolve(__dirname + "/lib/browser-sync-client.js");
+            var shims  = path.resolve(__dirname + "/lib/client-shims.js");
+
+            var jsFile  = fs.readFileSync(client);
+            var jsShims = fs.readFileSync(shims);
+
+            result  = jsShims + jsFile;
         }
 
         return function (req, res) {
