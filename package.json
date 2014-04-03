@@ -46,6 +46,7 @@
   "keywords": [],
   "dependencies": {
     "gulp": "^3.6.0",
-    "gulp-browserify": "^0.5.0"
+    "gulp-browserify": "^0.5.0",
+    "gulp-uglify": "^0.2.1"
   }
 }
