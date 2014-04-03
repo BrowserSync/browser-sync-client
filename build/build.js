@@ -11,7 +11,7 @@ var eventsFile  = fs.src("lib/events.js");
  */
 var uglifier = function () {
     return through2.obj(function (file, enc, cb) {
-        var minified = UglifyJS.minify(file.toString(), {fromString: true});
+        var minified = UglifyJS.minify(file.contents.toString(), {fromString: true});
         this.push(new File({
             cwd:  "./",
             base: "./",
@@ -28,18 +28,23 @@ var uglifier = function () {
  */
 var combiner = function (events) {
 
-    var eventCode;
-    events.pipe(through2.obj(function (file, enc, cb) {
-        eventCode = file.contents.toString();
-        cb();
-    }));
+//    var eventCode = "";
+//    events.pipe(through2.obj(function (file, enc, cb) {
+//        eventCode = file.contents.toString();
+//        cb();
+//    }));
     var string;
     return through2.obj(function (data, enc, cb) {
         string += data.toString();
         cb(null);
     }, function (cb) {
         if (string.length) {
-            this.push(new Buffer(eventCode + string));
+            this.push(new File({
+                cwd:  "./",
+                base: "./",
+                path: "./dist.js",
+                contents: new Buffer(string)
+            }));
         }
         this.push(null);
         cb();
@@ -49,6 +54,6 @@ var combiner = function (events) {
 var b = browserify();
 b.add('./lib/index.js');
 b.bundle()
-    .pipe(combiner(eventsFile))
+    .pipe(combiner())
     .pipe(uglifier())
     .pipe(fs.dest("./dist"));
