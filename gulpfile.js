@@ -1,7 +1,9 @@
-var gulp = require("gulp");
-var karma = require('gulp-karma');
-var jshint = require('gulp-jshint');
-var contribs = require('gulp-contribs');
+var gulp        = require("gulp");
+var karma       = require('gulp-karma');
+var jshint      = require('gulp-jshint');
+var contribs    = require('gulp-contribs');
+var browserify  = require('gulp-browserify');
+var uglify      = require('gulp-uglify');
 
 var testFiles = [
     'test/todo.js'
@@ -11,7 +13,7 @@ gulp.task('test', function() {
     // Be sure to return the stream
     return gulp.src(testFiles)
         .pipe(karma({
-            configFile: 'test/karma.conf.js',
+            configFile: 'test/karma.conf.ci.js',
             action: 'run'
         }));
 });
@@ -36,4 +38,18 @@ gulp.task('contribs', function () {
         .pipe(contribs())
         .pipe(gulp.dest("./"))
 });
+
+// Basic usage
+gulp.task('build', function() {
+    // Single entry point to browserify
+    gulp.src('lib/index.js')
+        .pipe(browserify())
+        .pipe(uglify({outSourceMap: true}))
+        .pipe(gulp.dest('./dist'))
+});
+
+gulp.task("dev", ['build'], function () {
+    gulp.watch("lib/*.js", ['build']);
+});
+
 gulp.task('default', ["lint", "test"]);

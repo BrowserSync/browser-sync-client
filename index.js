@@ -3,7 +3,7 @@
 var fs       = require("fs");
 var path     = require("path");
 
-var built  = path.resolve(__dirname + "/dist/dist.js");
+var built  = path.resolve(__dirname + "/dist/index.js");
 
 module.exports.middleware = function () {
 
