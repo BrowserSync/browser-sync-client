@@ -26,9 +26,16 @@ gulp.task('test:watch', function() {
         }));
 });
 
-gulp.task('lint', function () {
-    gulp.src(['test/client-script/*.js', 'lib/*', 'test/middleware/*.js'])
-        .pipe(jshint('test/.jshintrc'))
+//gulp.task('lint-test', function () {
+//    gulp.src(['test/client-script/*.js', 'test/middleware/*.js'])
+//        .pipe(jshint('test/.jshintrc'))
+//        .pipe(jshint.reporter("default"))
+//        .pipe(jshint.reporter("fail"))
+//});
+
+gulp.task('lint-lib', function () {
+    gulp.src(['lib/*', '!lib/browser-sync-client.js', '!lib/events.js'])
+        .pipe(jshint('lib/.jshintrc'))
         .pipe(jshint.reporter("default"))
         .pipe(jshint.reporter("fail"))
 });
@@ -52,4 +59,4 @@ gulp.task("dev", ['build'], function () {
     gulp.watch("lib/*.js", ['build']);
 });
 
-gulp.task('default', ["lint", "test"]);
+gulp.task('default', ["lint-lib", "test"]);
