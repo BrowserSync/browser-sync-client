@@ -1,9 +1,10 @@
-var gulp        = require("gulp");
-var karma       = require('gulp-karma');
-var jshint      = require('gulp-jshint');
-var contribs    = require('gulp-contribs');
-var browserify  = require('gulp-browserify');
-var uglify      = require('gulp-uglify');
+var gulp       = require("gulp");
+var karma      = require('gulp-karma');
+var jshint     = require('gulp-jshint');
+var contribs   = require('gulp-contribs');
+var browserify = require('gulp-browserify');
+var uglify     = require('gulp-uglify');
+var through2   = require('through2');
 
 var testFiles = [
     'test/todo.js'
@@ -26,12 +27,12 @@ gulp.task('test:watch', function() {
         }));
 });
 
-//gulp.task('lint-test', function () {
-//    gulp.src(['test/client-script/*.js', 'test/middleware/*.js'])
-//        .pipe(jshint('test/.jshintrc'))
-//        .pipe(jshint.reporter("default"))
-//        .pipe(jshint.reporter("fail"))
-//});
+gulp.task('lint-test', function () {
+    gulp.src(['test/client-new/*.js', 'test/middleware/*.js'])
+        .pipe(jshint('test/.jshintrc'))
+        .pipe(jshint.reporter("default"))
+        .pipe(jshint.reporter("fail"))
+});
 
 gulp.task('lint-lib', function () {
     gulp.src(['lib/*', '!lib/browser-sync-client.js', '!lib/events.js'])
@@ -46,8 +47,32 @@ gulp.task('contribs', function () {
         .pipe(gulp.dest("./"))
 });
 
+/**
+ * Strip debug statements
+ * @returns {*}
+ */
+var stripDebug = function () {
+    return through2.obj(function (file, enc, cb) {
+        var string = file.contents.toString();
+        var regex  = /\/\*\*debug:start\*\*\/[\s\S]*\/\*\*debug:end\*\*\//g;
+        var stripped = string.replace(regex, "");
+        file.contents = new Buffer(stripped);
+        this.push(file);
+        cb();
+    });
+};
+
 // Basic usage
-gulp.task('build', function() {
+gulp.task('build-dist', function() {
+    // Single entry point to browserify
+    gulp.src('lib/index.js')
+        .pipe(browserify())
+        .pipe(stripDebug())
+        .pipe(uglify({outSourceMap: true}))
+        .pipe(gulp.dest('./dist'))
+});
+
+gulp.task('build-dev', function() {
     // Single entry point to browserify
     gulp.src('lib/index.js')
         .pipe(browserify())
@@ -55,8 +80,8 @@ gulp.task('build', function() {
         .pipe(gulp.dest('./dist'))
 });
 
-gulp.task("dev", ['build'], function () {
-    gulp.watch("lib/*.js", ['build']);
+gulp.task("dev", ['build-dev'], function () {
+    gulp.watch("lib/*.js", ['build-dev']);
 });
 
-gulp.task('default', ["lint-lib", "test"]);
+gulp.task('default', ["lint-lib", "lint-test", "test"]);
