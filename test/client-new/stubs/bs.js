@@ -1,5 +1,7 @@
 var __bs_stub__ = {
-    opts: {},
+    opts: {
+        notify: true
+    },
     utils: {
         getScrollSpace: function () {},
         getScrollPosition: function () {}

@@ -80,7 +80,7 @@ gulp.task('build-dev', function() {
 });
 
 gulp.task("dev", ['build-dev'], function () {
-    gulp.watch("lib/*.js", ['build-dev']);
+    gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ['build-dev']);
 });
 
 gulp.task('default', ["lint-lib", "lint-test", "test"]);
