@@ -5,15 +5,20 @@ describe("The scroll Plugin", function () {
     var scrollSpaceStub;
     var scrollPositionStub;
 
-    beforeEach(function () {
-        scroll.init(bs, __bs_events__);
+    before(function () {
         scrollSpaceStub    = sinon.stub(bs.utils, "getScrollSpace");
         scrollPositionStub = sinon.stub(bs.utils, "getScrollPosition");
     });
-    afterEach(function () {
+
+    beforeEach(function () {
+        scroll.init(bs, __bs_events__);
+    });
+
+    after(function () {
         scrollSpaceStub.restore();
         scrollPositionStub.restore();
     });
+
     it("getScrollTopPercentage(): 1", function () {
         scrollSpaceStub.returns({x:0, y:1000});
         scrollPositionStub.returns({x:0, y:500});
@@ -26,18 +31,6 @@ describe("The scroll Plugin", function () {
         scrollPositionStub.returns({x:0, y:250});
         var actual   = scroll.getScrollTopPercentage();
         var expected = 0.25;
-        assert.equal(actual, expected);
-    });
-    it("getScrollTop(): 1", function () {
-        scrollPositionStub.returns({x:0, y:100});
-        var actual   = scroll.getScrollTop();
-        var expected = 100;
-        assert.equal(actual, expected);
-    });
-    it("getScrollTop(): 2", function () {
-        scrollPositionStub.returns({x:100, y:0});
-        var actual   = scroll.getScrollTop();
-        var expected = 0;
         assert.equal(actual, expected);
     });
     it("scrollEvent(): 1", function () {
@@ -62,6 +55,12 @@ describe("The scroll Plugin", function () {
         sinon.assert.calledWithExactly(stub, 0, 250);
         stub.restore();
     });
+    it("should return early if cannot sync", function () {
+        scrollSpaceStub.returns({x:0, y:1000});
+        var stub   = sinon.stub(bs, "canSync").returns(false);
+        var actual = scroll.scrollEvent(bs)({raw: {x: 0, y:200 }});
+        assert.equal(actual, false);
+    });
 
     describe("watch scroll", function () {
 
@@ -74,6 +73,9 @@ describe("The scroll Plugin", function () {
         });
         afterEach(function () {
             stub.reset();
+        });
+        after(function () {
+            stub.restore();
         });
 
         it("should emit event if can scroll", function () {
@@ -94,6 +96,28 @@ describe("The scroll Plugin", function () {
             scroll.canEmitEvents = false;
             scroll.watchScroll(socket, false)();
             sinon.assert.notCalled(spy);
+        });
+    });
+
+    describe("getScrollPercentage(): ", function(){
+        it("should return x & y values: 1", function(){
+            var actual   = scroll.getScrollPercentage({x:0, y:1000}, {x:0, y:250});
+            assert.equal(actual.y, 0.25);
+        });
+        it("should return x & y values: 2", function(){
+            var actual   = scroll.getScrollPercentage({x:0, y:1000}, {x:0, y:100});
+            assert.equal(actual.y, 0.1);
+        });
+    });
+
+    describe("getScrollPosition(): ", function(){
+        it("", function(){
+            var stub = sinon.stub(scroll, "getScrollTop").returns({x:0, y:1000}, {x:0, y:100});
+            var actual   = scroll.getScrollPosition();
+            assert.equal(actual.raw.x, 0);
+            assert.equal(actual.raw.y, 1000);
+            assert.equal(actual.proportional, 0.25);
+            stub.restore();
         });
     });
 });

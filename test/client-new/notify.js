@@ -1,9 +1,8 @@
 describe("The Notify Element", function() {
 
     var notify = window.__bs_notify__;
-    var bs = window.__bs_stub__;
+    var bs     = window.__bs_stub__;
     bs.emitter = window.__bs_emitter__;
-    bs.emitter   = window.__bs_emitter__;
 
     it("can be initialised", function() {
         var elem     = notify.init(bs);
@@ -37,6 +36,7 @@ describe("The Notify Element", function() {
         var cb  = notify.watchEvent();
         cb({message: "custom message"});
         sinon.assert.calledWithExactly(stub, "custom message");
+        stub.restore();
     });
 
     it("should register an listener on the emitter", function () {
@@ -48,5 +48,73 @@ describe("The Notify Element", function() {
         spy.restore();
     });
 
+    describe("Flashing", function () {
 
+        var elemStub;
+        var scrollStub;
+        var fakeElem;
+        before(function () {
+            fakeElem = {
+                innerHTML: "",
+                style: {
+                    top: "",
+                    display: ""
+                }
+            };
+            elemStub   = sinon.stub(notify, "getElem");
+            scrollStub = sinon.stub(notify, "getScrollTop").returns(100);
+        });
+        afterEach(function () {
+            scrollStub.reset();
+        });
+        after(function () {
+            elemStub.restore();
+            scrollStub.restore();
+        });
+        it("should return early if no ELEM", function () {
+            elemStub.returns(false);
+            var actual = notify.flash();
+            assert.equal(actual, false);
+        });
+        it("should return early if no ELEM", function () {
+
+            elemStub.returns(fakeElem);
+            var elem = notify.flash("MESSAGE");
+
+            var actual   = elem.style.top;
+            var expected = "100px";
+            assert.equal(actual, expected);
+
+            actual   = elem.style.display;
+            expected = "block";
+            assert.equal(actual, expected);
+
+        });
+        it("should hide the notify elem ", function(){
+
+            elemStub.returns(fakeElem);
+            var clock = sinon.useFakeTimers();
+            var elem = notify.flash("MESSAGE");
+
+            clock.tick(2010);
+
+            var actual    = elem.style.display;
+            var expected = "none";
+
+            assert.equal(actual, expected);
+            clock.restore();
+        });
+
+    });
+
+    // Utils
+    it("should retrieve elem from closure", function () {
+        var elem = notify.getElem();
+    });
+    it("should return 0 if no access to utils", function () {
+        var stub = sinon.stub(bs.utils, "getScrollPosition").returns({x:0, y:500});
+        var actual   = notify.getScrollTop();
+        var expected = 500;
+        assert.equal(actual, expected);
+    });
 });
