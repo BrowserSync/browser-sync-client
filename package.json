@@ -41,7 +41,8 @@
     "karma-html2js-preprocessor": "^0.1.0",
     "gulp-browserify": "^0.5.0",
     "gulp-uglify": "^0.2.1",
-    "gulp": "^3.6.0"
+    "gulp": "^3.6.0",
+    "karma-coverage": "^0.2.1"
   },
   "keywords": [],
   "dependencies": {

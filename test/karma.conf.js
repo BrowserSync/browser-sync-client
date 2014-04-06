@@ -42,7 +42,7 @@ module.exports = function (config) {
 
         // test results reporter to use
         // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-        reporters: ["dots"],
+        reporters: ["dots", "coverage"],
 
 
         // web server port
@@ -76,7 +76,8 @@ module.exports = function (config) {
         captureTimeout: 60000,
 
         preprocessors: {
-            "fixtures/*.html" : ["html2js"]
+            "fixtures/*.html": ["html2js"],
+            "../dist/index.js": ["coverage"]
         },
 
         // Continuous Integration mode

@@ -76,7 +76,6 @@ gulp.task('build-dev', function() {
     // Single entry point to browserify
     gulp.src('lib/index.js')
         .pipe(browserify())
-        .pipe(uglify({outSourceMap: true}))
         .pipe(gulp.dest('./dist'))
 });
 
