@@ -8,7 +8,7 @@ describe("Generic Browser utils", function(){
         before(function () {
             act = function () {
                 return browserUtils.utils.getScrollPosition();
-            }
+            };
         });
         it("should return x & y values", function(){
             var actual = act();
