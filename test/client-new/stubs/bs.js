@@ -1,6 +1,7 @@
 var __bs_stub__ = {
     opts: {
         notify: true,
+        codeSync: true,
         ghostMode: {
             scroll: true
         }
