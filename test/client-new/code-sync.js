@@ -10,6 +10,9 @@ describe("Code Sync", function() {
         bs.emitter = emitter;
         spy = sinon.spy(bs.emitter, "on");
     });
+    after(function () {
+        spy.restore();
+    });
 
     it("should register a listener", function () {
         codeSync.init(bs);
