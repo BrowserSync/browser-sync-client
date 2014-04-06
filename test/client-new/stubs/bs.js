@@ -1,6 +1,9 @@
 var __bs_stub__ = {
     opts: {
-        notify: true
+        notify: true,
+        ghostMode: {
+            scroll: true
+        }
     },
     utils: {
         getScrollSpace: function () {},
