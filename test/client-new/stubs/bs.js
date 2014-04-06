@@ -8,7 +8,7 @@ var __bs_stub__ = {
     },
     utils: {
         getScrollSpace: function () {},
-        getScrollPosition: function () {}
+        getBrowserScrollPosition: function () {}
     },
     socket: {
         on: function(){},

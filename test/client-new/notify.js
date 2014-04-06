@@ -112,9 +112,10 @@ describe("The Notify Element", function() {
         var elem = notify.getElem();
     });
     it("should return 0 if no access to utils", function () {
-        var stub = sinon.stub(bs.utils, "getScrollPosition").returns({x:0, y:500});
+        var stub = sinon.stub(bs.utils, "getBrowserScrollPosition").returns({x:0, y:500});
         var actual   = notify.getScrollTop();
         var expected = 500;
         assert.equal(actual, expected);
+        stub.restore();
     });
 });
