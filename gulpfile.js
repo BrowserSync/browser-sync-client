@@ -66,8 +66,8 @@ var stripDebug = function () {
 gulp.task('build-dist', function() {
     // Single entry point to browserify
     gulp.src('lib/index.js')
-        .pipe(browserify())
         .pipe(stripDebug())
+        .pipe(browserify())
         .pipe(uglify({outSourceMap: true}))
         .pipe(gulp.dest('./dist'))
 });

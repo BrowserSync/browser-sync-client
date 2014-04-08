@@ -108,15 +108,4 @@ describe("The scroll Plugin", function () {
             assert.equal(actual.y, 0.1);
         });
     });
-
-    describe("getScrollPosition(): ", function(){
-        it("w", function(){
-//            var stub = sinon.stub(scroll, "getScrollTop").returns({x:0, y:1000}, {x:0, y:100});
-//            var actual   = scroll.getScrollPosition();
-//            assert.equal(actual.raw.x, 0);
-//            assert.equal(actual.raw.y, 1000);
-//            assert.equal(actual.proportional, 0.25);
-//            stub.restore();
-        });
-    });
 });

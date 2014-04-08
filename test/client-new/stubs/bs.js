@@ -3,7 +3,8 @@ var __bs_stub__ = {
         notify: true,
         codeSync: true,
         ghostMode: {
-            scroll: true
+            scroll: true,
+            clicks: true
         }
     },
     utils: {
