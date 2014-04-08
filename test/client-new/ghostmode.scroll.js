@@ -32,32 +32,32 @@ describe("The scroll Plugin", function () {
         var expected = 0.25;
         assert.equal(actual, expected);
     });
-    it("scrollEvent(): 1", function () {
+    it("socketEvent(): 1", function () {
         var stub = sinon.stub(window, "scrollTo");
-        scroll.scrollEvent(bs)({position: {raw: 100}});
+        scroll.socketEvent(bs)({position: {raw: 100}});
         sinon.assert.calledWithExactly(stub, 0, 100);
         stub.restore();
     });
-    it("scrollEvent(): 2", function () {
+    it("socketEvent(): 2", function () {
         var stub = sinon.stub(window, "scrollTo");
         scrollSpaceStub.returns({x:0, y:1000});
         bs.opts.scrollProportionally = true;
-        scroll.scrollEvent(bs)({position: {proportional: 0.5}});
+        scroll.socketEvent(bs)({position: {proportional: 0.5}});
         sinon.assert.calledWithExactly(stub, 0, 500);
         stub.restore();
     });
-    it("scrollEvent(): 3", function () {
+    it("socketEvent(): 3", function () {
         var stub = sinon.stub(window, "scrollTo");
         scrollSpaceStub.returns({x:0, y:1000});
         bs.opts.scrollProportionally = true;
-        scroll.scrollEvent(bs)({position: {proportional: 0.25}});
+        scroll.socketEvent(bs)({position: {proportional: 0.25}});
         sinon.assert.calledWithExactly(stub, 0, 250);
         stub.restore();
     });
     it("should return early if cannot sync", function () {
         scrollSpaceStub.returns({x:0, y:1000});
         var stub   = sinon.stub(bs, "canSync").returns(false);
-        var actual = scroll.scrollEvent(bs)({raw: {x: 0, y:200 }});
+        var actual = scroll.socketEvent(bs)({raw: {x: 0, y:200 }});
         assert.equal(actual, false);
     });
 
@@ -81,7 +81,7 @@ describe("The scroll Plugin", function () {
             var spy    = sinon.spy();
             var socket = {emit: spy};
             scroll.canEmitEvents = true;
-            scroll.watchScroll(socket)();
+            scroll.browserEvent(socket)();
             sinon.assert.calledWithExactly(spy, "scroll", {
                 position: {
                     proportional: 0.5,
@@ -93,7 +93,7 @@ describe("The scroll Plugin", function () {
             var spy    = sinon.spy();
             var socket = {emit: spy};
             scroll.canEmitEvents = false;
-            scroll.watchScroll(socket, false)();
+            scroll.browserEvent(socket, false)();
             sinon.assert.notCalled(spy);
         });
     });
