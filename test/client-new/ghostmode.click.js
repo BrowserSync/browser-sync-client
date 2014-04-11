@@ -2,10 +2,9 @@ describe("The click Plugin", function () {
 
     var clicks = window.__bs_clicks__;
     var bs     = __bs_stub__;
-    var bodyStub, eventStub, browserEventStub, socketEventStub, socketStub;
+    var eventStub, browserEventStub, socketEventStub, socketStub;
 
     before(function () {
-        bodyStub         = sinon.stub(clicks.utils, "getBody").returns("BODY");
         eventStub        = sinon.stub(__bs_events__, "addEvent");
         browserEventStub = sinon.stub(clicks, "browserEvent").returns("EVENT");
         socketEventStub  = sinon.stub(clicks, "socketEvent").returns("socketEvent");
@@ -18,7 +17,6 @@ describe("The click Plugin", function () {
     });
 
     after(function () {
-        bodyStub.restore();
         eventStub.restore();
         browserEventStub.restore();
         socketEventStub.restore();
@@ -30,52 +28,16 @@ describe("The click Plugin", function () {
 
         clicks.init(bs, __bs_events__);
 
-        sinon.assert.calledOnce(bodyStub);
-        sinon.assert.calledWithExactly(eventStub, "BODY", "click", "EVENT");
+        var args = eventStub.getCall(0).args;
+        assert.equal(args[1], "click");
+        assert.equal(args[2], "EVENT");
+
         sinon.assert.calledWithExactly(socketStub, "click", "socketEvent");
 
-        sinon.assert.calledWithExactly(browserEventStub, bs.socket);
+        sinon.assert.calledWithExactly(browserEventStub, bs);
         sinon.assert.calledWithExactly(socketEventStub, bs, __bs_events__);
 
     });
-
-    describe("Getting index of an element", function () {
-        it("should return the correct index", function () {
-            var elem     = {id: "abx"};
-            var stub     = sinon.stub(document, "getElementsByTagName").returns([elem, {id: "xab"}]);
-            var actual   = clicks.getElementIndex("link", elem);
-            var expected = 0;
-            assert.equal(actual, expected);
-            stub.restore();
-        });
-        it("should return the correct index", function () {
-            var elem     = {id: "xab"};
-            var stub     = sinon.stub(document, "getElementsByTagName").returns([{id: "abx"}, elem]);
-            var actual   = clicks.getElementIndex("link", elem);
-            var expected = 1;
-            assert.equal(actual, expected);
-            stub.restore();
-        });
-    });
-
-    describe("Getting element data for socket event", function(){
-        var indexStub;
-        before(function () {
-            indexStub = sinon.stub(clicks, "getElementIndex").returns(0);
-        });
-        after(function () {
-            indexStub.restore();
-        });
-        it("should return an object containing element info", function(){
-            var elem = {
-                tagName: "link"
-            };
-            var actual   = clicks.getElementData(elem);
-            assert.equal(actual.tagName, "link");
-            assert.equal(actual.index, 0);
-        });
-    });
-
 
     describe("browserEvent(): ", function(){
         var getDataStub, eventMock, func, dataStub;
@@ -85,7 +47,7 @@ describe("The click Plugin", function () {
                 tagName: "DIV",
                 index: 0
             };
-            getDataStub = sinon.stub(clicks, "getElementData").returns(dataStub);
+            getDataStub = sinon.stub(bs.utils, "getElementData").returns(dataStub);
         });
         beforeEach(function(){
             eventMock = {
@@ -93,7 +55,7 @@ describe("The click Plugin", function () {
                 type: "DIV"
             };
             socketStubEmit.reset();
-            func = clicks.browserEvent(bs.socket);
+            func = clicks.browserEvent(bs);
         });
         after(function () {
             getDataStub.restore();
@@ -130,7 +92,7 @@ describe("The click Plugin", function () {
             func            = clicks.socketEvent(bs, __bs_events__);
             canSyncStub     = sinon.stub(bs, "canSync").returns(true);
             triggerClick    = sinon.stub(__bs_events__, "triggerClick");
-            elemStub        = sinon.stub(clicks, "getSingleElement").returns(true);
+            elemStub        = sinon.stub(bs.utils, "getSingleElement").returns(true);
         });
         afterEach(function () {
             canSyncStub.reset();
@@ -157,40 +119,6 @@ describe("The click Plugin", function () {
             elemStub.returns(false);
             func({});
             sinon.assert.notCalled(triggerClick);
-        });
-    });
-
-    describe("getting a single element", function(){
-        var fakeElems = [
-            {
-                id: "item1",
-                tagName: "link"
-            },
-            {
-                id: "item2",
-                tagName: "link"
-            }
-        ], stub;
-        before(function(){
-            stub = sinon.stub(document, "getElementsByTagName").returns(fakeElems);
-        });
-        after(function () {
-            stub.restore();
-        });
-        it("should call getElementsByTagName() with the tagname", function(){
-            clicks.getSingleElement("link", 0);
-            sinon.assert.calledWithExactly(stub, "link");
-        });
-        it("should return the correct index: 1", function(){
-            var actual   = clicks.getSingleElement("link", 0);
-            var expected = "item1";
-            assert.equal(actual.id, expected);
-        });
-        it("should return the correct index: 2", function(){
-            var actual   = clicks.getSingleElement("link", 1);
-            var expected = "item2";
-            assert.equal(actual.id, expected);
-            stub.restore();
         });
     });
 });

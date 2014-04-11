@@ -9,7 +9,10 @@ var __bs_stub__ = {
     },
     utils: {
         getScrollSpace: function () {},
-        getBrowserScrollPosition: function () {}
+        getBrowserScrollPosition: function () {},
+        getBody: function () {},
+        getSingleElement: function () {},
+        getElementData: function () {}
     },
     socket: {
         on: function(){},
