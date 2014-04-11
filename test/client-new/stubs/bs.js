@@ -19,5 +19,6 @@ var __bs_stub__ = {
 };
 
 var __bs_events__ = {
-    addEvent: function(){}
+    addEvent: function(){},
+    triggerClick: function(){}
 };

@@ -17,7 +17,6 @@ module.exports = function (config) {
             "client-script/libs/jquery.js",
             "client-script/libs/assert.js",
             "../node_modules/sinon/pkg/sinon.js",
-//            "fixtures/*.html",
             "../dist/index.js",
             "client-new/stubs/bs.js",
             "client-new/*.js"

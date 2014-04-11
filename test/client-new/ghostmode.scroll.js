@@ -59,6 +59,7 @@ describe("The scroll Plugin", function () {
         var stub   = sinon.stub(bs, "canSync").returns(false);
         var actual = scroll.socketEvent(bs)({raw: {x: 0, y:200 }});
         assert.equal(actual, false);
+        stub.restore();
     });
 
     describe("watch scroll", function () {
