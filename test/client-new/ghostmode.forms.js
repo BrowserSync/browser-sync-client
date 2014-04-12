@@ -1,6 +1,6 @@
 describe("The scroll Plugin", function () {
 
-    var forms   = window.__bs_forms__;
+    var forms   = window.__bs_inputs__;
     var bs      = __bs_stub__;
     var events  = __bs_events__;
 

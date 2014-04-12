@@ -67,9 +67,9 @@ var stripDebug = function () {
 gulp.task('build-dist', function() {
     // Single entry point to browserify
     gulp.src('lib/index.js')
-        .pipe(stripDebug())
         .pipe(browserify())
         .pipe(gulp.dest('./dist'))
+        .pipe(stripDebug())
         .pipe(uglify())
         .pipe(rename("index.min.js"))
         .pipe(gulp.dest('./dist'));

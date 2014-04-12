@@ -25,7 +25,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "gulp build-dev && gulp && mocha test/middleware",
+    "test": "gulp build-dist && gulp && mocha test/middleware",
     "install": "gulp build-dist"
   },
   "devDependencies": {
