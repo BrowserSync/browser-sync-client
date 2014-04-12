@@ -3,7 +3,7 @@
 var fs       = require("fs");
 var path     = require("path");
 
-var built  = path.resolve(__dirname + "/dist/index.js");
+var script  = path.resolve(__dirname + "/dist/index.min.js");
 
 module.exports.middleware = function () {
 
@@ -12,16 +12,10 @@ module.exports.middleware = function () {
         var result;
 
         if (options && options.minify) {
-            result = fs.readFileSync(built);
+            result = fs.readFileSync(script);
         } else {
-
-            var client = path.resolve(__dirname + "/lib/browser-sync-client.js");
-            var shims  = path.resolve(__dirname + "/lib/client-shims.js");
-
-            var jsFile  = fs.readFileSync(client);
-            var jsShims = fs.readFileSync(shims);
-
-            result  = jsShims + jsFile;
+            script = path.resolve(__dirname + "/dist/index.js");
+            result = fs.readFileSync(script);
         }
 
         return function (req, res) {

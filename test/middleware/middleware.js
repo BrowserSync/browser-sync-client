@@ -1,19 +1,22 @@
-var assert = require("chai").assert;
-var middleware = require("../../index.js").middleware;
-var http = require("http");
-var request = require("supertest");
-var express = require("express");
-var app = express();
+"use strict";
 
-app.use("/client", middleware());
+var index       = require("../../index.js");
 
-var string1 = "}(window, (typeof ___socket___ === \"undefined\") ? {} : ___socket___));";
-var string2 = "if (typeof Array.prototype.indexOf === \"undefined\") {";
+var assert      = require("chai").assert;
+var http        = require("http");
+var request     = require("supertest");
+var express     = require("express");
 
 describe("Using the middleware", function () {
 
+    var app;
+    before(function () {
+        app = express();
+        app.use("/client", index.middleware()({minify: true}));
+    });
+
     it("Returns a function", function () {
-        assert.isFunction(middleware);
+        assert.isFunction(index.middleware);
     });
 
     it("should return the JS", function (done) {
@@ -22,8 +25,7 @@ describe("Using the middleware", function () {
             .expect("Content-Type", /text\/javascript/)
             .expect(200)
             .end(function (err, res) {
-                assert(~res.text.indexOf(string1));
-                assert(~res.text.indexOf(string2));
+                assert.isTrue(res.text.length > 0);
                 done();
             });
     });

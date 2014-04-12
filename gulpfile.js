@@ -5,6 +5,7 @@ var contribs   = require('gulp-contribs');
 var browserify = require('gulp-browserify');
 var uglify     = require('gulp-uglify');
 var through2   = require('through2');
+var rename     = require('gulp-rename');
 
 var testFiles = [
     'test/todo.js'
@@ -68,8 +69,10 @@ gulp.task('build-dist', function() {
     gulp.src('lib/index.js')
         .pipe(stripDebug())
         .pipe(browserify())
-        .pipe(uglify({outSourceMap: true}))
         .pipe(gulp.dest('./dist'))
+        .pipe(uglify())
+        .pipe(rename("index.min.js"))
+        .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('build-dev', function() {

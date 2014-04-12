@@ -25,12 +25,11 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "gulp build-dev && gulp",
+    "test": "gulp build-dev && gulp && mocha test/middleware",
     "install": "gulp build-dist"
   },
   "devDependencies": {
     "gulp-karma": "0.0.4",
-    "gulp-mocha": "~0.4.1",
     "gulp-jshint": "~1.4.0",
     "chai": "~1.9.0",
     "sinon": "~1.8.2",
@@ -43,7 +42,10 @@
     "gulp-uglify": "^0.2.1",
     "gulp": "^3.6.0",
     "karma-coverage": "^0.2.1",
-    "karma-chrome-launcher": "^0.1.3"
+    "karma-chrome-launcher": "^0.1.3",
+    "express": "^4.0.0",
+    "gulp-rename": "^1.2.0",
+    "mocha": "^1.18.2"
   },
   "keywords": [],
   "dependencies": {
