@@ -104,4 +104,25 @@ describe("The scroll Plugin", function () {
             assert.equal(forms.canEmitEvents, true);
         });
     });
+    describe("socketEvent(): ", function(){
+        var func;
+        before(function () {
+            func = forms.socketEvent(bs);
+        });
+        it("should return a function", function(){
+            assert.equal(typeof func === "function", true);
+        });
+        it("should return false if cannot sync", function () {
+            var canSyncStub = sinon.stub(bs, "canSync").returns(false);
+            var actual = func({value: "kittie"});
+            assert.equal(actual, false);
+            canSyncStub.restore();
+        });
+        it("should set the value of the element", function () {
+            var elementStub = sinon.stub(bs.utils, "getSingleElement").returns({});
+            var actual = func({value: "kittie"});
+            assert.equal(actual.value, "kittie");
+            elementStub.restore();
+        });
+    });
 });
