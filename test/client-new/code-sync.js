@@ -14,8 +14,13 @@ describe("Code Sync", function() {
 
     it("should register a listener on the socket", function () {
         var reloadStub = sinon.stub(codeSync, "reload").returns("reloadFunc");
+
         codeSync.init(bs);
-        sinon.assert.calledWithExactly(socketSpy, "reload", "reloadFunc");
+        sinon.assert.calledWithExactly(socketSpy, "file:reload", "reloadFunc");
+
+        var secondCall = socketSpy.getCall(1).args;
+        assert.equal(secondCall[0], "browser:reload");
+
         reloadStub.restore();
     });
 
