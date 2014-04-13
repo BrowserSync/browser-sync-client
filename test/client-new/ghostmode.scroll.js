@@ -80,7 +80,7 @@ describe("The scroll Plugin", function () {
 
         it("should emit event if can scroll", function () {
             var spy    = sinon.spy();
-            var socket = {emit: spy};
+            var socket = {socket: {emit: spy}};
             scroll.canEmitEvents = true;
             scroll.browserEvent(socket)();
             sinon.assert.calledWithExactly(spy, "scroll", {

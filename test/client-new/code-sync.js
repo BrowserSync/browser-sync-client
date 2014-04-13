@@ -1,22 +1,22 @@
 describe("Code Sync", function() {
     var codeSync;
     var bs;
-    var emitter = window.__bs_emitter__;
-    var spy;
+    var socketSpy;
 
     before(function () {
-        codeSync = window.__bs_code_sync__;
-        bs = window.__bs_stub__;
-        bs.emitter = emitter;
-        spy = sinon.spy(bs.emitter, "on");
+        bs        = window.__bs_stub__;
+        codeSync  = window.__bs_code_sync__;
+        socketSpy = sinon.spy(bs.socket, "on");
     });
     after(function () {
-        spy.restore();
+        socketSpy.restore();
     });
 
-    it("should register a listener", function () {
+    it("should register a listener on the socket", function () {
+        var reloadStub = sinon.stub(codeSync, "reload").returns("reloadFunc");
         codeSync.init(bs);
-        sinon.assert.called(spy);
+        sinon.assert.calledWithExactly(socketSpy, "reload", "reloadFunc");
+        reloadStub.restore();
     });
 
     describe("reload()", function () {
