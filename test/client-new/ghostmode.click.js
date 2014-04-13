@@ -40,7 +40,7 @@ describe("The click Plugin", function () {
     });
 
     describe("browserEvent(): ", function(){
-        var getDataStub, eventMock, func, dataStub;
+        var getDataStub, eventMock, func, dataStub, changeSpy;
         before(function () {
             browserEventStub.restore();
             dataStub = {
@@ -48,6 +48,7 @@ describe("The click Plugin", function () {
                 index: 0
             };
             getDataStub = sinon.stub(bs.utils, "getElementData").returns(dataStub);
+            changeSpy   = sinon.stub(bs.utils, "forceChange");
         });
         beforeEach(function(){
             eventMock = {
@@ -56,6 +57,9 @@ describe("The click Plugin", function () {
             };
             socketStubEmit.reset();
             func = clicks.browserEvent(bs);
+        });
+        afterEach(function () {
+            changeSpy.reset();
         });
         after(function () {
             getDataStub.restore();
@@ -81,6 +85,16 @@ describe("The click Plugin", function () {
             clicks.canEmitEvents = false;
             func(eventMock);
             assert.equal(clicks.canEmitEvents, true);
+        });
+        it("should force the change event if elem type is radio or checkbox", function () {
+            eventMock.target.type = "checkbox";
+            func(eventMock);
+            sinon.assert.called(changeSpy);
+        });
+        it("should force the change event if elem type is radio or checkbox", function () {
+            eventMock.target.type = "radio";
+            func(eventMock);
+            sinon.assert.called(changeSpy);
         });
     });
 

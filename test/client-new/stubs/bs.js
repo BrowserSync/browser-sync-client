@@ -12,7 +12,8 @@ var __bs_stub__ = {
         getBrowserScrollPosition: function () {},
         getBody: function () {},
         getSingleElement: function () {},
-        getElementData: function () {}
+        getElementData: function () {},
+        forceChange: function () {}
     },
     socket: {
         on: function(){},
