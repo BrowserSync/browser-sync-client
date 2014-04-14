@@ -26,29 +26,29 @@ describe("The location Plugin", function () {
             sinon.assert.calledWithExactly(socketStub, "location", "socket");
         });
     });
-    describe("socketEvent():", function () {
-
-        var urlStub, func;
-        before(function () {
-            urlStub = sinon.stub(location, "setUrl");
-            func = location.socketEvent(bs);
-        });
-        afterEach(function () {
-            urlStub.reset();
-        });
-        after(function () {
-            urlStub.restore();
-        });
-        it("should return a function", function () {
-            assert.equal(typeof location.socketEvent() === "function", true);
-        });
-        it("should set the url if url exists in event", function () {
-            func({url: "/index.html"});
-            sinon.assert.called(urlStub);
-        });
-        it("should not the url if url does not exist", function () {
-            func({});
-            sinon.assert.notCalled(urlStub);
-        });
-    });
+//    describe("socketEvent():", function () {
+//
+//        var urlStub, func;
+//        before(function () {
+//            urlStub = sinon.stub(location, "setUrl");
+//            func = location.socketEvent(bs);
+//        });
+//        afterEach(function () {
+//            urlStub.reset();
+//        });
+//        after(function () {
+//            urlStub.restore();
+//        });
+//        it("should return a function", function () {
+//            assert.equal(typeof location.socketEvent() === "function", true);
+//        });
+//        it("should set the url if url exists in event", function () {
+//            func({url: "/index.html"});
+//            sinon.assert.called(urlStub);
+//        });
+//        it("should not the url if url does not exist", function () {
+//            func({});
+//            sinon.assert.notCalled(urlStub);
+//        });
+//    });
 });

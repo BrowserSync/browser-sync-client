@@ -980,13 +980,15 @@ var eventManager = require("./events").manager;
 exports.plugins = {
     "scroll": require("./ghostmode.scroll"),
     "clicks": require("./ghostmode.clicks"),
-    "forms": require("./ghostmode.forms")
+    "forms": require("./ghostmode.forms"),
+    "location": require("./ghostmode.location")
 };
 
 var options = [
     "scroll",
     "clicks",
-    "forms"
+    "forms",
+    "location"
 ];
 
 /**
@@ -1002,7 +1004,7 @@ exports.init = function (bs) {
         }
     }
 };
-},{"./events":5,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.scroll":14}],13:[function(require,module,exports){
+},{"./events":5,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1016,7 +1018,7 @@ exports.canEmitEvents = true;
  * @param {BrowserSync} bs
  */
 exports.init = function (bs) {
-    bs.socket.on("location", exports.socketEvent());
+    bs.socket.on(EVENT_NAME, exports.socketEvent());
 };
 
 /**
@@ -1024,17 +1026,8 @@ exports.init = function (bs) {
  */
 exports.socketEvent = function () {
     return function (data) {
-        if (data && data.url) {
-            exports.setUrl(data.url);
-        }
+        window.location = data.url;
     };
-};
-
-/**
- * Set the window location
- */
-exports.setUrl = function (data) {
-    window.location = data.url;
 };
 },{}],14:[function(require,module,exports){
 "use strict";
