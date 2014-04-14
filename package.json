@@ -1,7 +1,7 @@
 {
   "name": "browser-sync-client",
   "description": "Client-side scripts for BrowserSync",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/shakyshane/browser-sync-client",
   "author": {
     "name": "Shane Osbourne",
@@ -25,8 +25,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "gulp build-dist && gulp && mocha test/middleware",
-    "install": "gulp build-dist"
+    "test": "gulp && mocha test/middleware"
   },
   "devDependencies": {
     "gulp-karma": "0.0.4",
