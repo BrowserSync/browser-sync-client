@@ -86,4 +86,4 @@ gulp.task("dev", ['build-dist'], function () {
     gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ['build-dist']);
 });
 
-gulp.task('default', ["lint-lib", "lint-test", "test"]);
+gulp.task('default', ["lint-lib", "lint-test", "build-dist", "test"]);
