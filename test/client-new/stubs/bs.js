@@ -4,7 +4,12 @@ var __bs_stub__ = {
         codeSync: true,
         ghostMode: {
             scroll: true,
-            clicks: true
+            clicks: true,
+            forms: {
+                toggles: true,
+                inputs: true,
+                submit: true
+            }
         }
     },
     utils: {

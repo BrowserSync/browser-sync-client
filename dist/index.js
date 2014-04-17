@@ -665,6 +665,7 @@ if (window.__karma__) {
     window.__bs_inputs__     = require("./ghostmode.forms.input");
     window.__bs_toggles__    = require("./ghostmode.forms.toggles");
     window.__bs_submit__     = require("./ghostmode.forms.submit");
+    window.__bs_forms__      = require("./ghostmode.forms");
     window.__bs_utils__      = require("./browser.utils");
     window.__bs_emitter__    = emitter;
     window.__bs_notify__     = notify;
@@ -674,7 +675,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":15,"./socket":16}],7:[function(require,module,exports){
+},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":15,"./socket":16}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -807,14 +808,40 @@ exports.socketEvent = function (bs) {
     };
 };
 },{}],9:[function(require,module,exports){
-var inputs  = require("./ghostmode.forms.input");
-var toggles = require("./ghostmode.forms.toggles");
-var submit  = require("./ghostmode.forms.submit");
+"use strict";
 
+exports.plugins = {
+    "inputs":  require("./ghostmode.forms.input"),
+    "toggles": require("./ghostmode.forms.toggles"),
+    "submit":  require("./ghostmode.forms.submit")
+};
+
+/**
+ * Load plugins for enabled options
+ * @param bs
+ */
 exports.init = function (bs, eventManager) {
-    inputs.init(bs, eventManager);
-    toggles.init(bs, eventManager);
-    submit.init(bs, eventManager);
+
+    var checkOpt = true;
+    var opts = bs.opts.ghostMode.forms;
+
+    if (opts === true) {
+        checkOpt = false;
+    }
+
+    function init(name) {
+        exports.plugins[name].init(bs, eventManager);
+    }
+
+    for (var name in exports.plugins) {
+        if (!checkOpt) {
+            init(name);
+        } else {
+            if (opts[name]) {
+                init(name);
+            }
+        }
+    }
 };
 },{"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11}],10:[function(require,module,exports){
 "use strict";
@@ -978,29 +1005,27 @@ exports.socketEvent = function (bs) {
 var eventManager = require("./events").manager;
 
 exports.plugins = {
-    "scroll": require("./ghostmode.scroll"),
-    "clicks": require("./ghostmode.clicks"),
-    "forms": require("./ghostmode.forms"),
+    "scroll":   require("./ghostmode.scroll"),
+    "clicks":   require("./ghostmode.clicks"),
+    "forms":    require("./ghostmode.forms"),
     "location": require("./ghostmode.location")
 };
-
-var options = [
-    "scroll",
-    "clicks",
-    "forms",
-    "location"
-];
 
 /**
  * Load plugins for enabled options
  * @param bs
  */
 exports.init = function (bs) {
+
     var ghostMode = bs.opts.ghostMode;
-    for (var i = 0, n = options.length; i < n; i += 1) {
-        var item = options[i];
-        if (ghostMode[item]) {
-            exports.plugins[item].init(bs, eventManager);
+
+    function init(name) {
+        exports.plugins[name].init(bs, eventManager);
+    }
+
+    for (var name in exports.plugins) {
+        if (ghostMode[name]) {
+            init(name);
         }
     }
 };
