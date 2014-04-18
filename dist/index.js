@@ -175,6 +175,12 @@ exports.swapFile = function (elem, attr, opts) {
         if (!opts.timestamps) {
             suffix = "";
         }
+        if (opts.overrideHost) {
+            var urlSplit = currentValue.split("/");
+            var currentHost = urlSplit[0] + "//" + urlSplit[2] + "/";
+            var newHost = opts.overrideHost + "/";
+            currentValue = currentValue.replace(currentHost,newHost);
+        }
     }
 
     elem[attr] = currentValue + suffix;
