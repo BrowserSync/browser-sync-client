@@ -25,15 +25,15 @@ describe("The Notify Element", function() {
                 "border-bottom-left-radius: 5px"
             ]
         };
-        var elem   = notify.init(bs);
-        var actual = elem.style.backgroundColor;
+        var elem     = notify.init(bs);
+        var actual   = elem.style.backgroundColor;
         var expected = "yellow";
         assert.equal(actual, expected);
     });
 
     it("can return a callback for watching", function(){
         var stub = sinon.stub(notify, "flash");
-        var cb  = notify.watchEvent();
+        var cb   = notify.watchEvent();
         cb({message: "custom message"});
         sinon.assert.calledWithExactly(stub, "custom message");
         stub.restore();
@@ -44,6 +44,14 @@ describe("The Notify Element", function() {
         notify.init(bs);
         var actual   = spy.getCall(0).args[0];
         var expected = "notify";
+        assert.equal(actual, expected);
+        spy.restore();
+    });
+    it("should register an listener on the socket", function () {
+        var spy = sinon.spy(bs.socket, "on");
+        notify.init(bs);
+        var actual   = spy.getCall(0).args[0];
+        var expected = "browser:notify";
         assert.equal(actual, expected);
         spy.restore();
     });

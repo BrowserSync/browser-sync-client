@@ -157,7 +157,7 @@ exports.init = function (bs) {
  * @param elem
  * @param attr
  * @param opts
- * @returns {{elem: *, timeStamp: number}}
+ * @returns {{elem: HTMLElement, timeStamp: number}}
  */
 exports.swapFile = function (elem, attr, opts) {
 
@@ -1192,11 +1192,14 @@ exports.init = function (bs) {
     }
 
     elem = document.createElement("DIV");
-    elem.id = "notifyElem";
+    elem.id = "__bs_notify__";
     elem.style.cssText = cssStyles.join(";");
     document.getElementsByTagName("body")[0].appendChild(elem);
 
-    browserSync.emitter.on("notify", exports.watchEvent());
+    var flashFn = exports.watchEvent();
+
+    browserSync.emitter.on("notify", flashFn);
+    browserSync.socket.on("browser:notify", flashFn);
 
     return elem;
 };
