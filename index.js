@@ -7,7 +7,7 @@ var script  = path.resolve(__dirname + "/dist/index.min.js");
 
 module.exports.middleware = function () {
 
-    return function (options) {
+    return function (options, connector) {
 
         var result;
 
@@ -20,7 +20,7 @@ module.exports.middleware = function () {
 
         return function (req, res) {
             res.setHeader("Content-Type", "text/javascript");
-            res.end(result);
+            res.end(connector + result);
         };
     }
 };

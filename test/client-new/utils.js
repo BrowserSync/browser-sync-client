@@ -3,18 +3,61 @@ describe("Generic Browser utils", function(){
     before(function () {
         browserUtils = window.__bs_utils__;
     });
-    describe("getScrollPosition(): ", function () {
-        var act;
+    describe("getBrowserScrollPosition(): ", function () {
+        var act, windowStub, documentStub, stub;
         before(function () {
             act = function () {
                 return browserUtils.utils.getBrowserScrollPosition();
             };
+            windowStub   = sinon.stub(browserUtils, "getWindow").returns({});
+            documentStub = sinon.stub(browserUtils, "getDocument");
         });
-        it("should return x & y values", function(){
+        beforeEach(function () {
+            stub = {
+                documentElement: {},
+                body: {}
+            };
+        });
+        after(function () {
+            windowStub.restore();
+            documentStub.restore();
+        });
+        afterEach(function () {
+            windowStub.reset();
+            documentStub.reset();
+        });
+        it("should get scroll position from document.documentElement.scrollLeft/top", function(){
+            stub.documentElement.scrollLeft = 0;
+            stub.documentElement.scrollTop = 100;
+            documentStub.returns(stub);
+            var actual = act();
+            assert.equal(actual.x, 0);
+            assert.equal(actual.y, 100);
+        });
+        it("should get scroll position from document.body.scrollLeft/top", function(){
+            stub.body.scrollLeft = 100;
+            stub.body.scrollTop  = 0;
+            documentStub.returns(stub);
+            var actual = act();
+            assert.equal(actual.x, 100);
+            assert.equal(actual.y, 0);
+        });
+        it("should get scroll position from document.body.scrollLeft/top", function(){
+            stub.body.scrollLeft = 100;
+            stub.body.scrollTop  = 0;
+            documentStub.returns(stub);
+            var actual = act();
+            assert.equal(actual.x, 100);
+            assert.equal(actual.y, 0);
+        });
+        it("should get scroll position from window by default", function () {
+            windowStub.restore();
+            documentStub.returns(stub);
             var actual = act();
             assert.equal(actual.x, 0);
             assert.equal(actual.y, 0);
         });
+
     });
     describe("getScrollSpace(): 1", function () {
         var act;
@@ -32,6 +75,9 @@ describe("Generic Browser utils", function(){
                     scrollHeight: 1000
                 }
             });
+        });
+        after(function () {
+            documentStub.restore();
         });
         it("should return x & y values", function(){
             var actual = act();
@@ -107,5 +153,24 @@ describe("Generic Browser utils", function(){
             assert.equal(actual.tagName, "link");
             assert.equal(actual.index, 0);
         });
+    });
+
+    describe("forceChange(): ", function () {
+        var blur  = sinon.spy();
+        var focus = sinon.spy();
+        var elem = {
+            blur: blur,
+            focus: focus
+        };
+
+        var actual = window.__bs_utils__.utils.forceChange(elem);
+        sinon.assert.calledOnce(blur);
+        sinon.assert.calledOnce(focus);
+    });
+    describe("getDocument(): ", function () {
+        window.__bs_utils__.getDocument();
+    });
+    describe("getDocument(): ", function () {
+        window.__bs_utils__.utils.getBody();
     });
 });
