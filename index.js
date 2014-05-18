@@ -7,7 +7,7 @@ var script  = path.resolve(__dirname + "/dist/index.min.js");
 
 module.exports.middleware = function () {
 
-    return function (options, connector) {
+    return function (options, connector, type) {
 
         var result;
 
@@ -16,6 +16,10 @@ module.exports.middleware = function () {
         } else {
             script = path.resolve(__dirname + "/dist/index.js");
             result = fs.readFileSync(script);
+        }
+
+        if (type && type === "file") {
+            return connector + result;
         }
 
         return function (req, res) {
