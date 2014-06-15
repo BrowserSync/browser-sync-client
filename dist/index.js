@@ -181,16 +181,18 @@ exports.swapFile = function (elem, attr, opts) {
 
     elem[attr] = currentValue + suffix;
 
-    setTimeout(function () {
-        if (!hiddenElem) {
-            hiddenElem = document.createElement("DIV");
-            var body    = document.getElementsByTagName("body")[0];
-            body.appendChild(hiddenElem);
-        } else {
-            hiddenElem.style.display = "none";
-            hiddenElem.style.display = "block";
-        }
-    }, 100);
+
+    var body = document.body;
+
+        setTimeout(function () {
+            if (!hiddenElem) {
+                hiddenElem = document.createElement("DIV");
+                body.appendChild(hiddenElem);
+            } else {
+                hiddenElem.style.display = "none";
+                hiddenElem.style.display = "block";
+            }
+        }, 200);
 
 
     return {
