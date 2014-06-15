@@ -143,6 +143,8 @@ var options = {
     }
 };
 
+var hiddenElem;
+
 /**
  * @param {BrowserSync} bs
  */
@@ -178,6 +180,18 @@ exports.swapFile = function (elem, attr, opts) {
     }
 
     elem[attr] = currentValue + suffix;
+
+    setTimeout(function () {
+        if (!hiddenElem) {
+            hiddenElem = document.createElement("DIV");
+            var body    = document.getElementsByTagName("body")[0];
+            body.appendChild(hiddenElem);
+        } else {
+            hiddenElem.style.display = "none";
+            hiddenElem.style.display = "block";
+        }
+    }, 100);
+
 
     return {
         elem: elem,

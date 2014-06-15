@@ -1,9 +1,9 @@
 var gulp       = require("gulp");
 var karma      = require('gulp-karma');
 var jshint     = require('gulp-jshint');
+var uglify     = require('gulp-uglify');
 var contribs   = require('gulp-contribs');
 var browserify = require('gulp-browserify');
-var uglify     = require('gulp-uglify');
 var through2   = require('through2');
 var rename     = require('gulp-rename');
 
