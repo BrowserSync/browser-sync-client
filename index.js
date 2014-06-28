@@ -5,7 +5,7 @@ var path     = require("path");
 
 var script  = path.resolve(__dirname + "/dist/index.min.js");
 
-module.exports.middleware = function () {
+function init() {
 
     return function (options, connector, type) {
 
@@ -27,4 +27,7 @@ module.exports.middleware = function () {
             res.end(connector + result);
         };
     }
-};
+}
+
+module.exports.middleware = init;
+module.exports.plugin     = init;
