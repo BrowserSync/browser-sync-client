@@ -12,7 +12,7 @@ describe("Using the middleware", function () {
     var app;
     before(function () {
         app = express();
-        app.use("/client", index.middleware()({minify: true}, "BEFORE"));
+        app.use("/client", index.middleware({minify: true}, "BEFORE"));
     });
 
     it("Returns a function", function () {
