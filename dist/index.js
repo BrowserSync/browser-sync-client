@@ -582,8 +582,6 @@ exports._EventManager = function (cache) {
     };
 };
 
-
-
 /**
  * Trigger a click on an element
  * @param elem
@@ -608,11 +606,111 @@ exports.triggerClick = function (elem) {
     }
 };
 
+/**
+ * Trigger a type key on an element
+ * @param elem
+ */
+exports.triggerTypekey = function (elem) {
+if (elem.value!=undefined) {
+    var evObj;
+    if (document.createEvent) {
+    k=elem.value;
+    var oEvent = document.createEvent('Event');
+
+    Object.defineProperty(oEvent, 'keyCode', {
+        get : function () {
+            return this.keyCodeVal;
+        }
+    });
+
+    Object.defineProperty(oEvent, 'which', {
+        get : function () {
+            return this.keyCodeVal;
+        }
+    });
+    if (oEvent.initEvent) {
+        oEvent.initEvent("keydown", true, true, document.defaultView, false, false, false, false, k, k);
+    } else {
+        oEvent.initEvent("keydown", true, true, document.defaultView, false, false, false, false, k, 0);
+    }
+
+    oEvent.keyCodeVal = k;   
+    document.dispatchEvent(oEvent);
+    var oEventkeyup = document.createEvent('Event');
+    Object.defineProperty(oEventkeyup, 'keyCode', {
+        get : function () {
+            return this.keyCodeVal;
+        }
+    });
+    Object.defineProperty(oEventkeyup, 'which', {
+        get : function () {
+            return this.keyCodeVal;
+        }
+    });
+    if (oEventkeyup.initEvent) {
+        oEventkeyup.initEvent("keyup", true, true, document.defaultView, false, false, false, false, k, k);
+    } else {
+        oEventkeyup.initEvent("keyup", true, true, document.defaultView, false, false, false, false, k, 0);
+    }
+    oEventkeyup.keyCodeVal = k;
+    document.dispatchEvent(oEventkeyup);
+
+function __triggerKeyboardEvent(el, keyCode)
+{
+    var eventObj = document.createEventObject ?
+    document.createEventObject() : document.createEvent("Events");
+  
+    if(eventObj.initEvent){
+      eventObj.initEvent("keydown", true, true);
+    }
+    eventObj.keyCode = keyCode;
+    eventObj.which = keyCode;    
+    el.dispatchEvent ? el.dispatchEvent(eventObj) : el.fireEvent("onkeydown", eventObj);   
+} 
+
+function traceEvent(e){
+    $(".logs").prepend(jQuery("<li>").html(
+      "Key = " + e.keyCode
+    ).fadeIn());
+    
+    console.log(e);
+}
+
+function triggerKeyboardEvent(el, keyCode){
+    var keyboardEvent = document.createEvent("Event");    
+    var initMethod = typeof keyboardEvent.initEvent !== 'undefined' ? "initKeyboardEvent" : "initKeyEvent";
+    keyboardEvent[initMethod](
+                       "keydown",
+                        true,      // bubbles oOooOOo0
+                        true,      // cancelable   
+                        window,    // view
+                        false,     // ctrlKeyArg
+                        false,     // altKeyArg
+                        false,     // shiftKeyArg
+                        false,     // metaKeyArg
+                        keyCode,  
+                        0          // charCode   
+    );
+  
+    el.dispatchEvent(keyboardEvent); 
+}
+    } else {
+
+        if (document.createEventObject) {         
+            evObj = document.createEventObject();
+            evObj.cancelBubble = true;
+            elem.fireEvent("on" + "keydown", evObj);
+        }
+    }
+
+}
+};
+
 var cache = new exports._ElementCache();
 var eventManager = new exports._EventManager(cache);
 
 eventManager.triggerClick = exports.triggerClick;
-
+eventManager.triggerTypekey = exports.triggerTypekey;
 exports.manager = eventManager;
 
 
@@ -684,6 +782,7 @@ if (window.__karma__) {
     window.__bs_scroll__     = require("./ghostmode.scroll");
     window.__bs_clicks__     = require("./ghostmode.clicks");
     window.__bs_location__   = require("./ghostmode.location");
+    window.__bs_typekey__     = require("./ghostmode.typekeys");
     window.__bs_inputs__     = require("./ghostmode.forms.input");
     window.__bs_toggles__    = require("./ghostmode.forms.toggles");
     window.__bs_submit__     = require("./ghostmode.forms.submit");
@@ -697,7 +796,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":15,"./socket":16}],7:[function(require,module,exports){
+},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./ghostmode.typekeys":15,"./notify":16,"./socket":17}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1029,6 +1128,7 @@ var eventManager = require("./events").manager;
 exports.plugins = {
     "scroll":   require("./ghostmode.scroll"),
     "clicks":   require("./ghostmode.clicks"),
+    "typekeys":   require("./ghostmode.typekeys"),
     "forms":    require("./ghostmode.forms"),
     "location": require("./ghostmode.location")
 };
@@ -1051,7 +1151,7 @@ exports.init = function (bs) {
         }
     }
 };
-},{"./events":5,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14}],13:[function(require,module,exports){
+},{"./events":5,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14,"./ghostmode.typekeys":15}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1180,6 +1280,67 @@ exports.getScrollTopPercentage = function (pos) {
 },{}],15:[function(require,module,exports){
 "use strict";
 
+/**
+ * This is the plugin for syncing key typing between browsers
+ * @type {string}
+ */
+var EVENT_NAME  = "input:text";
+exports.canEmitEvents = true;
+
+/**
+ * @param {BrowserSync} bs
+ * @param eventManager
+ */
+exports.init = function (bs, eventManager) {
+    eventManager.addEvent(document.body, "keydown", exports.browserEvent(bs));
+    bs.socket.on(EVENT_NAME, exports.socketEvent(bs, eventManager));
+};
+
+/**
+ * Uses event delegation to determine the key element
+ * @param {BrowserSync} bs
+ * @returns {Function}
+ */
+exports.browserEvent = function (bs) {
+
+    return function (event) {
+        
+        var elem = event.target || event.srcElement;
+        var data;
+
+        if (exports.canEmitEvents) {
+                data = bs.utils.getElementData(elem);
+                data.value = event.keyCode.toString();
+                bs.socket.emit(EVENT_NAME, data);
+        } else {
+            exports.canEmitEvents = true;
+        }
+    };
+};
+
+/**
+ * @param {BrowserSync} bs
+ * @param {manager} eventManager
+ * @returns {Function}
+ */
+exports.socketEvent = function (bs, eventManager) {
+
+    return function (data) {      
+        if (bs.canSync(data)) {
+
+            var elem = bs.utils.getSingleElement(data.tagName, data.index);
+                elem.value = data.value;
+                //elem.tagName =data.tagName
+            if (elem) {
+                exports.canEmitEvents = false;            
+                eventManager.triggerTypekey(elem);
+            }
+        }
+    };
+};
+},{}],16:[function(require,module,exports){
+"use strict";
+
 var scroll = require("./ghostmode.scroll");
 
 var styles = [
@@ -1276,7 +1437,7 @@ exports.flash = function (message, timeout) {
 
     return elem;
 };
-},{"./ghostmode.scroll":14}],16:[function(require,module,exports){
+},{"./ghostmode.scroll":14}],17:[function(require,module,exports){
 "use strict";
 
 /**
