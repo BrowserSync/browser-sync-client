@@ -608,10 +608,35 @@ exports.triggerClick = function (elem) {
     }
 };
 
+/**
+ * Trigger an event on an element
+ * @param elem
+ */
+exports.triggerEvent = function (elem, event, type) {
+  
+    var evObj;
+
+    if (document.createEvent) {
+
+        evObj = document.createEvent(type);
+        evObj.initEvent(event, true, true);
+        elem.dispatchEvent(evObj);
+
+    } else {
+
+        if (document.createEventObject) {
+            evObj = document.createEventObject();
+            evObj.cancelBubble = true;
+            elem.fireEvent("on" + event, evObj);
+        }
+    }
+};
+
 var cache = new exports._ElementCache();
 var eventManager = new exports._EventManager(cache);
 
 eventManager.triggerClick = exports.triggerClick;
+eventManager.triggerEvent = exports.triggerEvent;
 
 exports.manager = eventManager;
 
@@ -812,7 +837,7 @@ exports.browserEvent = function (bs) {
  * @param {BrowserSync} bs
  * @returns {Function}
  */
-exports.socketEvent = function (bs) {
+exports.socketEvent = function (bs, eventManager) {
 
     return function (data) {
 
@@ -822,6 +847,7 @@ exports.socketEvent = function (bs) {
 
             if (elem) {
                 elem.value = data.value;
+                eventManager.triggerEvent(elem, "change", "HTMLEvents");
                 return elem;
             }
         }
