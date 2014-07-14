@@ -7,7 +7,7 @@ describe("The Notify Element", function() {
     it("can be initialised", function() {
         var elem     = notify.init(bs);
         var actual   = elem.style.backgroundColor;
-        var expected = "black";
+        var expected = "rgb(27, 32, 50)";
         assert.equal(actual, expected);
     });
     it("can be initialised with custom styles", function() {
@@ -35,7 +35,7 @@ describe("The Notify Element", function() {
         var stub = sinon.stub(notify, "flash");
         var cb   = notify.watchEvent();
         cb({message: "custom message"});
-        sinon.assert.calledWithExactly(stub, "custom message");
+        sinon.assert.calledWithExactly(stub, "custom message", undefined);
         stub.restore();
     });
 
@@ -83,20 +83,6 @@ describe("The Notify Element", function() {
             elemStub.returns(false);
             var actual = notify.flash();
             assert.equal(actual, false);
-        });
-        it("should return early if no ELEM", function () {
-
-            elemStub.returns(fakeElem);
-            var elem = notify.flash("MESSAGE");
-
-            var actual   = elem.style.top;
-            var expected = "100px";
-            assert.equal(actual, expected);
-
-            actual   = elem.style.display;
-            expected = "block";
-            assert.equal(actual, expected);
-
         });
         it("should hide the notify elem ", function(){
 

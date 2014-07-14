@@ -663,7 +663,7 @@ exports.init = function (opts) {
 
         if (opts.notify) {
             notify.init(bs);
-            notify.flash("Connected to BrowserSync :)");
+            notify.flash("Connected to BrowserSync");
         }
 
         if (opts.ghostMode) {
@@ -1122,7 +1122,7 @@ exports.socketEvent = function (bs) {
 };
 
 /**
- * @param socket
+ * @param bs
  */
 exports.browserEvent = function (bs) {
 
@@ -1183,20 +1183,26 @@ exports.getScrollTopPercentage = function (pos) {
 var scroll = require("./ghostmode.scroll");
 
 var styles = [
-    "background-color: black",
-    "color: white",
-    "padding: 10px",
     "display: none",
+    "padding: 15px",
     "font-family: sans-serif",
-    "position: absolute",
+    "position: fixed",
+    "font-size: 0.9em",
     "z-index: 9999",
     "right: 0px",
-    "border-bottom-left-radius: 5px"
+    "top: 0px",
+    "border-bottom-left-radius: 5px",
+    "background-color: #1B2032",
+    "margin: 0",
+    "color: white",
+    "text-align: center"
+
 ];
 
 var browserSync;
 var elem;
 var options;
+var timeoutInt;
 
 /**
  * @param {BrowserSync} bs
@@ -1205,7 +1211,7 @@ var options;
 exports.init = function (bs) {
 
     browserSync = bs;
-    options     = bs.opts;
+    options = bs.opts;
 
     var cssStyles = styles;
 
@@ -1229,9 +1235,9 @@ exports.init = function (bs) {
 /**
  * @returns {Function}
  */
-exports.watchEvent = function() {
+exports.watchEvent = function () {
     return function (data) {
-        exports.flash(data.message);
+        exports.flash(data.message, data.timeout);
     };
 };
 
@@ -1263,14 +1269,15 @@ exports.flash = function (message, timeout) {
         return false;
     }
 
-    var html = document.getElementsByTagName("HTML")[0];
-    html.style.position = "relative";
-
     elem.innerHTML = message;
-    elem.style.top = exports.getScrollTop() + "px";
     elem.style.display = "block";
 
-    window.setTimeout(function () {
+    if (timeoutInt) {
+        clearTimeout(timeoutInt);
+        timeoutInt = undefined;
+    }
+
+    timeoutInt = window.setTimeout(function () {
         elem.style.display = "none";
     }, timeout || 2000);
 
