@@ -144,6 +144,8 @@ var options = {
 };
 
 var hiddenElem;
+var OPT_PATH = "codeSync";
+var url = window.location.pathname;
 
 /**
  * @param {BrowserSync} bs
@@ -151,7 +153,10 @@ var hiddenElem;
 exports.init = function (bs) {
     bs.socket.on("file:reload", exports.reload(bs));
     bs.socket.on("browser:reload", function () {
-        exports.reloadBrowser(true);
+
+        if (bs.canSync({url: url}, OPT_PATH)) {
+            exports.reloadBrowser(true);
+        }
     });
 };
 
@@ -212,6 +217,9 @@ exports.reload = function (bs) {
      */
     return function (data) {
 
+        if (!bs.canSync({url:url}, OPT_PATH)) {
+            return;
+        }
         var transformedElem;
         var opts    = bs.opts;
         var emitter = bs.emitter;
@@ -629,6 +637,8 @@ var ghostMode = require("./ghostmode");
 var emitter   = require("./emitter");
 var utils     = require("./browser.utils");
 
+var bs;
+
 /**
  * @constructor
  */
@@ -643,7 +653,33 @@ var BrowserSync = function () {
  * @param data
  * @returns {boolean}
  */
-BrowserSync.prototype.canSync = function (data) {
+BrowserSync.prototype.canSync = function (data, opt) {
+
+    var overide = false;
+
+    if (opt.indexOf(".") > -1) {
+
+        var segs = opt.split(".");
+
+        try {
+            if (segs.length === 2) {
+                if (!bs.opts.ghostMode[segs[0]][segs[1]]) {
+                    return false;
+                }
+            }
+        } catch (e) {
+            return false;
+        }
+    } else {
+
+        if (!bs.opts[opt]) {
+            console.log("its false");
+            return false;
+        } else {
+            console.log("its true");
+        }
+    }
+
     return data.url === window.location.pathname;
 };
 
@@ -680,6 +716,12 @@ exports.init = function (opts) {
 
 socket.on("connection", exports.init);
 
+socket.on("options:set", function (data) {
+    notify.flash("Setting options...");
+    bs.opts = data.options;
+});
+
+
 /**debug:start**/
 if (window.__karma__) {
     window.__bs_scroll__     = require("./ghostmode.scroll");
@@ -706,6 +748,7 @@ if (window.__karma__) {
  * @type {string}
  */
 var EVENT_NAME  = "click";
+var OPT_PATH    = "clicks";
 exports.canEmitEvents = true;
 
 /**
@@ -752,7 +795,7 @@ exports.socketEvent = function (bs, eventManager) {
 
     return function (data) {
 
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
 
             var elem = bs.utils.getSingleElement(data.tagName, data.index);
 
@@ -771,6 +814,7 @@ exports.socketEvent = function (bs, eventManager) {
  * @type {string}
  */
 var EVENT_NAME  = "input:text";
+var OPT_PATH    = "forms.inputs";
 exports.canEmitEvents = true;
 
 /**
@@ -817,7 +861,7 @@ exports.socketEvent = function (bs) {
 
     return function (data) {
 
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
 
             var elem = bs.utils.getSingleElement(data.tagName, data.index);
 
@@ -874,6 +918,7 @@ exports.init = function (bs, eventManager) {
  * @type {string}
  */
 var EVENT_NAME  = "form:submit";
+var OPT_PATH    = "forms.submit";
 exports.canEmitEvents = true;
 
 /**
@@ -912,7 +957,7 @@ exports.browserEvent = function (bs) {
 exports.socketEvent = function (bs) {
 
     return function (data) {
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
             var elem = bs.utils.getSingleElement(data.tagName, data.index);
             exports.canEmitEvents = false;
             if (elem && data.type === "submit") {
@@ -934,6 +979,7 @@ exports.socketEvent = function (bs) {
  * @type {string}
  */
 var EVENT_NAME  = "input:toggles";
+var OPT_PATH    = "forms.toggles";
 exports.canEmitEvents = true;
 
 /**
@@ -998,7 +1044,7 @@ exports.socketEvent = function (bs) {
 
     return function (data) {
 
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
 
             exports.canEmitEvents = false;
 
@@ -1060,6 +1106,7 @@ exports.init = function (bs) {
  * @type {string}
  */
 var EVENT_NAME = "location";
+var OPT_PATH   = "location";
 exports.canEmitEvents = true;
 
 /**
@@ -1072,9 +1119,11 @@ exports.init = function (bs) {
 /**
  * Respond to socket event
  */
-exports.socketEvent = function () {
+exports.socketEvent = function (bs, eventManager) {
     return function (data) {
-        window.location = data.url;
+        if (bs.canSync(data, OPT_PATH)) {
+            window.location = data.url;
+        }
     };
 };
 },{}],14:[function(require,module,exports){
@@ -1085,6 +1134,7 @@ exports.socketEvent = function () {
  * @type {string}
  */
 var EVENT_NAME = "scroll";
+var OPT_PATH   = "scroll";
 var utils;
 
 exports.canEmitEvents = true;
@@ -1110,7 +1160,7 @@ exports.socketEvent = function (bs) {
 
         exports.canEmitEvents = false;
 
-        if (!bs.canSync(data)) {
+        if (!bs.canSync(data, OPT_PATH)) {
             return false;
         }
 
