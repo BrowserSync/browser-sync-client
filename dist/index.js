@@ -1,6 +1,97 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
+var socket       = require("./socket");
+var emitter      = require("./emitter");
+var utils        = require("./browser.utils");
+
+/**
+ * @constructor
+ */
+var BrowserSync = function (options) {
+    this.options = options;
+    this.socket  = socket;
+    this.emitter = emitter;
+    this.utils   = utils.utils;
+};
+
+/**
+ * Helper to check if syncing is allowed
+ * @param data
+ * @returns {boolean}
+ */
+BrowserSync.prototype.canSync = function (data, opt) {
+
+    return data.url === window.location.pathname;
+};
+
+/**
+ * Helper to check if syncing is allowed
+ * @returns {boolean}
+ */
+BrowserSync.prototype.getOption = function (path) {
+
+    if (path.match(/\./)) {
+        
+        var segs = path.split(".");
+
+        return getDeepOption(segs, this.options);
+        
+    } else {
+
+        var opt = this.options[path];
+        
+        if (isUndefined(opt)) {
+            return false;
+        } else {
+            return opt;
+        }
+    }
+};
+
+/**
+ * @type {Function}
+ */
+module.exports = BrowserSync;
+
+/**
+ * @param {String} val
+ * @returns {boolean}
+ */
+function isUndefined(val) {
+
+    return "undefined" === typeof val;
+}
+
+/**
+ * @param {Array} segs
+ * @param {Object} opts
+ */
+function getDeepOption(segs, opts) {
+
+    if (segs.length === 2) {
+        if (!isUndefined(opts[segs[0]])) {
+            if (!isUndefined(opts[segs[0]][segs[1]])) {
+                return opts[segs[0]][segs[1]];
+            }
+        }
+    }
+
+    if (segs.length === 3) {
+        if (!isUndefined(opts[segs[0]])) {
+            if (!isUndefined(opts[segs[0]][segs[1]])) {
+                if (!isUndefined(opts[segs[0]][segs[1]][segs[2]])) {
+                    return opts[segs[0]][segs[1]][segs[2]];
+                }
+            }
+        }
+    }
+
+    return false;
+}
+},{"./browser.utils":2,"./emitter":5,"./socket":17}],2:[function(require,module,exports){
+"use strict";
+
 /**
  * @returns {window}
  */
@@ -101,7 +192,7 @@ exports.utils = {
         return document.getElementsByTagName("body")[0];
     }
 };
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
 
     Array.prototype.indexOf= function(find, i) {
@@ -122,7 +213,7 @@ if (!("indexOf" in Array.prototype)) {
         return -1;
     };
 }
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 var options = {
@@ -312,7 +403,7 @@ exports.reloadBrowser = function (confirm) {
         $window.location.reload(true);
     }
 };
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 exports.events = {};
@@ -346,7 +437,7 @@ exports.on = function (name, func) {
         events[name].listeners.push(func);
     }
 };
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 exports._ElementCache = function () {
 
     var cache = {},
@@ -626,100 +717,57 @@ exports.manager = eventManager;
 
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
-var socket    = require("./socket");
-var shims     = require("./client-shims");
-var notify    = require("./notify");
-var codeSync  = require("./code-sync");
-var ghostMode = require("./ghostmode");
-var emitter   = require("./emitter");
-var utils     = require("./browser.utils");
-
-var bs;
-
-/**
- * @constructor
- */
-var BrowserSync = function () {
-    this.socket  = socket;
-    this.emitter = emitter;
-    this.utils   = utils.utils;
-};
+var socket       = require("./socket");
+var shims        = require("./client-shims");
+var notify       = require("./notify");
+var codeSync     = require("./code-sync");
+var BrowserSync  = require("./browser-sync");
+var ghostMode    = require("./ghostmode");
+var emitter      = require("./emitter");
+var utils        = require("./browser.utils");
 
 /**
- * Helper to check if syncing is allowed
- * @param data
- * @returns {boolean}
+ * @param options
  */
-BrowserSync.prototype.canSync = function (data, opt) {
-
-    var overide = false;
-
-    if (opt.indexOf(".") > -1) {
-
-        var segs = opt.split(".");
-
-        try {
-            if (segs.length === 2) {
-                if (!bs.opts.ghostMode[segs[0]][segs[1]]) {
-                    return false;
-                }
-            }
-        } catch (e) {
-            return false;
-        }
-    } else {
-
-        if (!bs.opts[opt]) {
-            console.log("its false");
-            return false;
-        } else {
-            console.log("its true");
-        }
-    }
-
-    return data.url === window.location.pathname;
-};
-
-var bs;
-
-/**
- * @param opts
- */
-exports.init = function (opts) {
+exports.init = function (options) {
 
     if (!window.___bs_client___) {
 
         window.___bs_client___ = true;
 
-        bs      = new BrowserSync();
-        bs.opts = opts;
+        var browserSync = new BrowserSync(options);
 
-        if (opts.notify) {
-            notify.init(bs);
+        if (options.notify) {
+            notify.init(browserSync);
             notify.flash("Connected to BrowserSync");
         }
 
-        if (opts.ghostMode) {
-            ghostMode.init(bs);
+        if (options.ghostMode) {
+            ghostMode.init(browserSync);
         }
 
-        if (opts.codeSync) {
-            codeSync.init(bs);
+        if (options.codeSync) {
+            codeSync.init(browserSync);
         }
     }
 
 };
 
+/**
+ * Handle individual socket connections
+ */
 socket.on("connection", exports.init);
 
+/**
+ * Options set
+ */
 socket.on("options:set", function (data) {
     notify.flash("Setting options...");
     bs.opts = data.options;
 });
-
 
 /**debug:start**/
 if (window.__karma__) {
@@ -732,6 +780,7 @@ if (window.__karma__) {
     window.__bs_forms__      = require("./ghostmode.forms");
     window.__bs_utils__      = require("./browser.utils");
     window.__bs_emitter__    = emitter;
+    window.__bs              = BrowserSync;
     window.__bs_notify__     = notify;
     window.__bs_code_sync__  = codeSync;
     window.__bs_ghost_mode__ = ghostMode;
@@ -739,7 +788,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":15,"./socket":16}],7:[function(require,module,exports){
+},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./ghostmode":13,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12,"./ghostmode.location":14,"./ghostmode.scroll":15,"./notify":16,"./socket":17}],8:[function(require,module,exports){
 "use strict";
 
 /**
@@ -805,7 +854,7 @@ exports.socketEvent = function (bs, eventManager) {
         }
     };
 };
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -873,7 +922,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 exports.plugins = {
@@ -909,7 +958,7 @@ exports.init = function (bs, eventManager) {
         }
     }
 };
-},{"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11}],10:[function(require,module,exports){
+},{"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -970,7 +1019,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1067,7 +1116,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 var eventManager = require("./events").manager;
@@ -1092,12 +1141,12 @@ exports.init = function (bs) {
     }
 
     for (var name in exports.plugins) {
-        if (ghostMode[name]) {
-            init(name);
-        }
+        //if (ghostMode[name]) {
+        init(name);
+        //}
     }
 };
-},{"./events":5,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14}],13:[function(require,module,exports){
+},{"./events":6,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.location":14,"./ghostmode.scroll":15}],14:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1125,7 +1174,7 @@ exports.socketEvent = function (bs, eventManager) {
         }
     };
 };
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1227,7 +1276,7 @@ exports.getScrollTopPercentage = function (pos) {
     var percentage  = exports.getScrollPercentage(scrollSpace, pos);
     return percentage.y;
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 var scroll = require("./ghostmode.scroll");
@@ -1333,7 +1382,7 @@ exports.flash = function (message, timeout) {
 
     return elem;
 };
-},{"./ghostmode.scroll":14}],16:[function(require,module,exports){
+},{"./ghostmode.scroll":15}],17:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1372,4 +1421,4 @@ exports.emit = function (name, data) {
 exports.on = function (name, func) {
     exports.socket.on(name, func);
 };
-},{}]},{},[6])
+},{}]},{},[7])
