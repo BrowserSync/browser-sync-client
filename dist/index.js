@@ -72,20 +72,18 @@ function isUndefined(val) {
 
 /**
  * @param obj
- * @param string
+ * @param path
+ * @param def
  */
-function getByPath(obj, string) {
+function getByPath(obj, path) {
 
-    var segs = string.split(".");
-
-    while (segs.length) {
-        var n = segs.shift();
-        if (n in obj) {
-            obj = obj[n];
-        } else {
-            return false;
-        }
+    for(var i = 0, path = path.split('.'), len = path.length; i < len; i++){
+        if(!obj || typeof obj !== 'object') return false;
+        obj = obj[path[i]];
     }
+
+    if(typeof obj === 'undefined') return false;
+
     return obj;
 }
 },{"./browser.utils":2,"./emitter":5,"./socket":17}],2:[function(require,module,exports){
