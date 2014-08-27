@@ -41,7 +41,7 @@ describe("The Forms Plugin", function () {
     describe("Init: with some disabled", function(){
         beforeEach(function () {
             forms.init({
-                opts: {
+                options: {
                     ghostMode: {
                         forms: {
                             submit: false,
@@ -65,7 +65,7 @@ describe("The Forms Plugin", function () {
     describe("Init: with all enabled", function(){
         beforeEach(function () {
             forms.init({
-                opts: {
+                options: {
                     ghostMode: {
                         forms: true
                     }
@@ -85,7 +85,7 @@ describe("The Forms Plugin", function () {
     describe("Init: with all Disabled", function(){
         beforeEach(function () {
             forms.init({
-                opts: {
+                options: {
                     ghostMode: {
                         forms: false
                     }

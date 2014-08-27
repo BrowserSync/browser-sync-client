@@ -23,7 +23,7 @@ describe("Init method", function(){
         codeSyncStub.restore();
     });
     it("should initilize", function(){
-        index.init(bs.opts);
+        index.init(bs.options);
         sinon.assert.called(notifySpy);
         sinon.assert.called(notifyFlashSpy);
         sinon.assert.called(ghostStub);

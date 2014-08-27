@@ -41,7 +41,7 @@ describe("The scroll Plugin", function () {
     it("socketEvent(): 2", function () {
         var stub = sinon.stub(window, "scrollTo");
         scrollSpaceStub.returns({x:0, y:1000});
-        bs.opts.scrollProportionally = true;
+        bs.options.scrollProportionally = true;
         scroll.socketEvent(bs)({position: {proportional: 0.5}});
         sinon.assert.calledWithExactly(stub, 0, 500);
         stub.restore();
@@ -49,7 +49,7 @@ describe("The scroll Plugin", function () {
     it("socketEvent(): 3", function () {
         var stub = sinon.stub(window, "scrollTo");
         scrollSpaceStub.returns({x:0, y:1000});
-        bs.opts.scrollProportionally = true;
+        bs.options.scrollProportionally = true;
         scroll.socketEvent(bs)({position: {proportional: 0.25}});
         sinon.assert.calledWithExactly(stub, 0, 250);
         stub.restore();
