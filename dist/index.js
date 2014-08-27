@@ -18,11 +18,20 @@ var BrowserSync = function (options) {
 /**
  * Helper to check if syncing is allowed
  * @param data
+ * @param optPath
  * @returns {boolean}
  */
-BrowserSync.prototype.canSync = function (data, opt) {
+BrowserSync.prototype.canSync = function (data, optPath) {
 
-    return data.url === window.location.pathname;
+
+    var canSync = true;
+
+    if (optPath) {
+        canSync = this.getOption(optPath);
+
+    }
+
+    return canSync && data.url === window.location.pathname;
 };
 
 /**
@@ -31,7 +40,7 @@ BrowserSync.prototype.canSync = function (data, opt) {
  */
 BrowserSync.prototype.getOption = function (path) {
 
-    if (path.match(/\./)) {
+    if (path && path.match(/\./)) {
 
         return getByPath(this.options, path);
         
@@ -66,9 +75,6 @@ function isUndefined(val) {
  * @param string
  */
 function getByPath(obj, string) {
-
-    string = string.replace(/\[(\w+)\]/g, ".$1");  // convert indexes to properties
-    string = string.replace(/^\./, ""); // strip leading dot
 
     var segs = string.split(".");
 
@@ -247,10 +253,10 @@ exports.init = function (bs) {
 /**
  * @param elem
  * @param attr
- * @param opts
+ * @param options
  * @returns {{elem: HTMLElement, timeStamp: number}}
  */
-exports.swapFile = function (elem, attr, opts) {
+exports.swapFile = function (elem, attr, options) {
 
     var currentValue = elem[attr];
     var timeStamp = new Date().getTime();
@@ -262,8 +268,8 @@ exports.swapFile = function (elem, attr, opts) {
         currentValue = justUrl[0];
     }
 
-    if (opts) {
-        if (!opts.timestamps) {
+    if (options) {
+        if (!options.timestamps) {
             suffix = "";
         }
     }
@@ -305,10 +311,10 @@ exports.reload = function (bs) {
             return;
         }
         var transformedElem;
-        var opts    = bs.opts;
+        var options    = bs.options;
         var emitter = bs.emitter;
 
-        if (data.url || !opts.injectChanges) {
+        if (data.url || !options.injectChanges) {
             exports.reloadBrowser(true);
         }
 
@@ -317,12 +323,12 @@ exports.reload = function (bs) {
             var domData = exports.getElems(data.fileExtension);
             var elems   = exports.getMatches(domData.elems, data.assetFileName, domData.attr);
 
-            if (elems.length && opts.notify) {
+            if (elems.length && options.notify) {
                 emitter.emit("notify", {message: "Injected: " + data.assetFileName});
             }
 
             for (var i = 0, n = elems.length; i < n; i += 1) {
-                transformedElem = exports.swapFile(elems[i], domData.attr, opts);
+                transformedElem = exports.swapFile(elems[i], domData.attr, options);
             }
         }
 
@@ -732,21 +738,16 @@ exports.init = function (options) {
         window.___bs_client___ = true;
 
         var browserSync = new BrowserSync(options);
-
+        
         if (options.notify) {
-            notify.init(browserSync);
             notify.flash("Connected to BrowserSync");
         }
 
-        if (options.ghostMode) {
-            ghostMode.init(browserSync);
-        }
-
-        if (options.codeSync) {
-            codeSync.init(browserSync);
-        }
+        // Always init on page load
+        notify.init(browserSync);
+        ghostMode.init(browserSync);
+        codeSync.init(browserSync);
     }
-
 };
 
 /**
@@ -759,7 +760,7 @@ socket.on("connection", exports.init);
  */
 socket.on("options:set", function (data) {
     notify.flash("Setting options...");
-    bs.opts = data.options;
+    browserSync.options = data.options;
 });
 
 /**debug:start**/
@@ -789,7 +790,7 @@ if (window.__karma__) {
  * @type {string}
  */
 var EVENT_NAME  = "click";
-var OPT_PATH    = "clicks";
+var OPT_PATH    = "ghostMode.clicks";
 exports.canEmitEvents = true;
 
 /**
@@ -855,7 +856,7 @@ exports.socketEvent = function (bs, eventManager) {
  * @type {string}
  */
 var EVENT_NAME  = "input:text";
-var OPT_PATH    = "forms.inputs";
+var OPT_PATH    = "ghostMode.forms.inputs";
 exports.canEmitEvents = true;
 
 /**
@@ -931,9 +932,9 @@ exports.plugins = {
 exports.init = function (bs, eventManager) {
 
     var checkOpt = true;
-    var opts = bs.opts.ghostMode.forms;
+    var options = bs.options.ghostMode.forms;
 
-    if (opts === true) {
+    if (options === true) {
         checkOpt = false;
     }
 
@@ -945,7 +946,7 @@ exports.init = function (bs, eventManager) {
         if (!checkOpt) {
             init(name);
         } else {
-            if (opts[name]) {
+            if (options[name]) {
                 init(name);
             }
         }
@@ -959,7 +960,7 @@ exports.init = function (bs, eventManager) {
  * @type {string}
  */
 var EVENT_NAME  = "form:submit";
-var OPT_PATH    = "forms.submit";
+var OPT_PATH    = "ghostMode.forms.submit";
 exports.canEmitEvents = true;
 
 /**
@@ -1020,7 +1021,7 @@ exports.socketEvent = function (bs) {
  * @type {string}
  */
 var EVENT_NAME  = "input:toggles";
-var OPT_PATH    = "forms.toggles";
+var OPT_PATH    = "ghostMode.forms.toggles";
 exports.canEmitEvents = true;
 
 /**
@@ -1127,7 +1128,7 @@ exports.plugins = {
  */
 exports.init = function (bs) {
 
-    var ghostMode = bs.opts.ghostMode;
+    var ghostMode = bs.options.ghostMode;
 
     function init(name) {
         exports.plugins[name].init(bs, eventManager);
@@ -1147,7 +1148,7 @@ exports.init = function (bs) {
  * @type {string}
  */
 var EVENT_NAME = "location";
-var OPT_PATH   = "location";
+var OPT_PATH   = "ghostMode.location";
 exports.canEmitEvents = true;
 
 /**
@@ -1175,7 +1176,7 @@ exports.socketEvent = function (bs, eventManager) {
  * @type {string}
  */
 var EVENT_NAME = "scroll";
-var OPT_PATH   = "scroll";
+var OPT_PATH   = "ghostMode.scroll";
 var utils;
 
 exports.canEmitEvents = true;
@@ -1205,7 +1206,7 @@ exports.socketEvent = function (bs) {
             return false;
         }
 
-        if (bs.opts && bs.opts.scrollProportionally) {
+        if (bs.options && bs.options.scrollProportionally) {
             return window.scrollTo(0, scrollSpace.y * data.position.proportional); // % of y axis of scroll to px
         } else {
             return window.scrollTo(0, data.position.raw);
@@ -1303,7 +1304,7 @@ var timeoutInt;
 exports.init = function (bs) {
 
     browserSync = bs;
-    options = bs.opts;
+    options = bs.options;
 
     var cssStyles = styles;
 

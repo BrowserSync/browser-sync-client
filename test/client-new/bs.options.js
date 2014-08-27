@@ -1,7 +1,7 @@
 describe("BrowserSync instance", function(){
     var bs;
     before(function () {
-        bs = new window.__bs();
+        bs = new window.__bs;
     });
     it("should exist", function () {
         assert.ok(typeof bs.canSync == "function");
