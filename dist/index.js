@@ -3,16 +3,28 @@
 
 var socket       = require("./socket");
 var emitter      = require("./emitter");
+var notify       = require("./notify");
 var utils        = require("./browser.utils");
 
 /**
  * @constructor
  */
 var BrowserSync = function (options) {
+
     this.options = options;
     this.socket  = socket;
     this.emitter = emitter;
     this.utils   = utils.utils;
+
+    var _this = this;
+
+    /**
+     * Options set
+     */
+    socket.on("options:set", function (data) {
+        emitter.emit("notify", "Setting options...");
+        _this.options = data.options;
+    });
 };
 
 /**
@@ -86,7 +98,7 @@ function getByPath(obj, path) {
 
     return obj;
 }
-},{"./browser.utils":2,"./emitter":5,"./socket":17}],2:[function(require,module,exports){
+},{"./browser.utils":2,"./emitter":5,"./notify":16,"./socket":17}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -754,13 +766,6 @@ exports.init = function (options) {
  */
 socket.on("connection", exports.init);
 
-/**
- * Options set
- */
-socket.on("options:set", function (data) {
-    notify.flash("Setting options...");
-    browserSync.options = data.options;
-});
 
 /**debug:start**/
 if (window.__karma__) {
@@ -1329,6 +1334,9 @@ exports.init = function (bs) {
  */
 exports.watchEvent = function () {
     return function (data) {
+        if (typeof data === "string") {
+            return exports.flash(data);
+        }
         exports.flash(data.message, data.timeout);
     };
 };
