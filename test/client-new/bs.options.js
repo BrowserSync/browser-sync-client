@@ -26,7 +26,13 @@ describe("BrowserSync options", function(){
                 scroll: true,
                 forms: {
                     toggles: false,
-                    inputs: true
+                    inputs: {
+                        one: {
+                            two: {
+                                three: "katz"
+                            }
+                        }
+                    }
                 }
             },
             codeSync: true
@@ -51,6 +57,15 @@ describe("BrowserSync options", function(){
         assert.equal(bs.getOption("ghostMode.forms.toggles"), false);
     });
     it("returns deep values (3 levels)", function () {
-        assert.equal(bs.getOption("ghostMode.forms.inputs"), true);
+        assert.deepEqual(bs.getOption("ghostMode.forms.inputs"), {
+            one: {
+                two: {
+                    three: "katz"
+                }
+            }
+        });
+    });
+    it("returns deep values (6 levels)", function () {
+        assert.equal(bs.getOption("ghostMode.forms.inputs.one.two.three"), "katz");
     });
 });
