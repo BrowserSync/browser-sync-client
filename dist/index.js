@@ -35,12 +35,12 @@ var BrowserSync = function (options) {
  */
 BrowserSync.prototype.canSync = function (data, optPath) {
 
+    data = data || {};
 
     var canSync = true;
 
     if (optPath) {
         canSync = this.getOption(optPath);
-
     }
 
     return canSync && data.url === window.location.pathname;
@@ -55,11 +55,11 @@ BrowserSync.prototype.getOption = function (path) {
     if (path && path.match(/\./)) {
 
         return getByPath(this.options, path);
-        
+
     } else {
 
         var opt = this.options[path];
-        
+
         if (isUndefined(opt)) {
             return false;
         } else {
@@ -85,16 +85,19 @@ function isUndefined(val) {
 /**
  * @param obj
  * @param path
- * @param def
  */
 function getByPath(obj, path) {
 
-    for(var i = 0, path = path.split('.'), len = path.length; i < len; i++){
-        if(!obj || typeof obj !== 'object') return false;
-        obj = obj[path[i]];
+    for(var i = 0, tempPath = path.split("."), len = tempPath.length; i < len; i++){
+        if(!obj || typeof obj !== "object") {
+            return false;
+        }
+        obj = obj[tempPath[i]];
     }
 
-    if(typeof obj === 'undefined') return false;
+    if(typeof obj === "undefined") {
+        return false;
+    }
 
     return obj;
 }
@@ -1151,7 +1154,7 @@ exports.init = function (bs) {
  * This is the plugin for syncing location
  * @type {string}
  */
-var EVENT_NAME = "location";
+var EVENT_NAME = "browser:location";
 var OPT_PATH   = "ghostMode.location";
 exports.canEmitEvents = true;
 
@@ -1165,12 +1168,19 @@ exports.init = function (bs) {
 /**
  * Respond to socket event
  */
-exports.socketEvent = function (bs, eventManager) {
+exports.socketEvent = function (bs) {
     return function (data) {
-        if (bs.canSync(data, OPT_PATH)) {
-            window.location = data.url;
+        if (data.override || bs.canSync(data, OPT_PATH)) {
+            exports.setUrl(data.url);
         }
     };
+};
+
+/**
+ * @param url
+ */
+exports.setUrl = function (url) {
+    window.location = url;
 };
 },{}],15:[function(require,module,exports){
 "use strict";

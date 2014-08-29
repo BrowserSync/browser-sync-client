@@ -1,10 +1,10 @@
 describe("BrowserSync instance", function(){
     var bs;
     before(function () {
-        bs = new window.__bs;
+        bs = new window.__bs();
     });
     it("should exist", function () {
-        assert.ok(typeof bs.canSync == "function");
+        assert.ok(typeof bs.canSync === "function");
     });
     it("syncs if on same page as emitter", function () {
         var actual = bs.canSync({url: window.location.pathname});
