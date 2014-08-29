@@ -23,32 +23,42 @@ describe("The location Plugin", function () {
         });
         it("should register an event on the socket", function () {
             location.init(bs);
-            sinon.assert.calledWithExactly(socketStub, "location", "socket");
+            sinon.assert.calledWithExactly(socketStub, "browser:location", "socket");
         });
     });
-//    describe("socketEvent():", function () {
-//
-//        var urlStub, func;
-//        before(function () {
-//            urlStub = sinon.stub(location, "setUrl");
-//            func = location.socketEvent(bs);
-//        });
-//        afterEach(function () {
-//            urlStub.reset();
-//        });
-//        after(function () {
-//            urlStub.restore();
-//        });
-//        it("should return a function", function () {
-//            assert.equal(typeof location.socketEvent() === "function", true);
-//        });
-//        it("should set the url if url exists in event", function () {
-//            func({url: "/index.html"});
-//            sinon.assert.called(urlStub);
-//        });
-//        it("should not the url if url does not exist", function () {
-//            func({});
-//            sinon.assert.notCalled(urlStub);
-//        });
-//    });
+    describe("socketEvent():", function () {
+
+        var urlStub, func, canSyncStub;
+        before(function () {
+            urlStub = sinon.stub(location, "setUrl");
+            func = location.socketEvent(bs);
+            canSyncStub= sinon.stub(bs, "canSync");
+        });
+        afterEach(function () {
+            urlStub.reset();
+            canSyncStub.reset();
+        });
+        after(function () {
+            urlStub.restore();
+            canSyncStub.restore();
+        });
+        it("should return a function", function () {
+            assert.equal(typeof location.socketEvent() === "function", true);
+        });
+        it("should set url if cansync = true", function () {
+            canSyncStub.returns(true);
+            func({url: "/index.html"});
+            sinon.assert.called(urlStub);
+        });
+        it("should not set url if cansync = false", function () {
+            canSyncStub.returns(false);
+            func({url: "/index.html"});
+            sinon.assert.notCalled(urlStub);
+        });
+        it("should set url if `canSync` = false, but `override` = true", function () {
+            canSyncStub.returns(false);
+            func({url: "/index.html", override: true});
+            sinon.assert.calledOnce(urlStub);
+        });
+    });
 });
