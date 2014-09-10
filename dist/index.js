@@ -654,9 +654,10 @@ var bs;
  */
 exports.init = function (opts) {
 
-    if (!window.___bs_client___) {
+    var BS = window.___browserSync___ || {};
+    if (!BS.client) {
 
-        window.___bs_client___ = true;
+        BS.client = true;
 
         bs      = new BrowserSync();
         bs.opts = opts;
@@ -1289,10 +1290,12 @@ exports.flash = function (message, timeout) {
 /**
  * @type {{emit: emit, on: on}}
  */
-exports.socket = window.___socket___ || {
-        emit: function(){},
-        on: function(){}
-    };
+var BS = window.___browserSync___ || {};
+exports.socket = BS.socket || {
+    emit: function(){},
+    on: function(){}
+};
+
 
 /**
  * @returns {string}
