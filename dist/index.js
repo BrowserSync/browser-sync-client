@@ -256,7 +256,6 @@ var url = window.location.pathname;
 exports.init = function (bs) {
     bs.socket.on("file:reload", exports.reload(bs));
     bs.socket.on("browser:reload", function () {
-
         if (bs.canSync({url: url}, OPT_PATH)) {
             exports.reloadBrowser(true);
         }
@@ -1134,17 +1133,8 @@ exports.plugins = {
  * @param bs
  */
 exports.init = function (bs) {
-
-    var ghostMode = bs.options.ghostMode;
-
-    function init(name) {
-        exports.plugins[name].init(bs, eventManager);
-    }
-
     for (var name in exports.plugins) {
-        //if (ghostMode[name]) {
-        init(name);
-        //}
+        exports.plugins[name].init(bs, eventManager);
     }
 };
 },{"./events":6,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.location":14,"./ghostmode.scroll":15}],14:[function(require,module,exports){
@@ -1171,7 +1161,11 @@ exports.init = function (bs) {
 exports.socketEvent = function (bs) {
     return function (data) {
         if (data.override || bs.canSync(data, OPT_PATH)) {
-            exports.setUrl(data.url);
+            if (data.path) {
+                exports.setPath(data.path);
+            } else {
+                exports.setUrl(data.url);
+            }
         }
     };
 };
@@ -1181,6 +1175,13 @@ exports.socketEvent = function (bs) {
  */
 exports.setUrl = function (url) {
     window.location = url;
+};
+
+/**
+ * @param path
+ */
+exports.setPath = function (path) {
+    window.location.pathname = path;
 };
 },{}],15:[function(require,module,exports){
 "use strict";

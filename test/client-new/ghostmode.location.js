@@ -28,19 +28,22 @@ describe("The location Plugin", function () {
     });
     describe("socketEvent():", function () {
 
-        var urlStub, func, canSyncStub;
+        var urlStub, func, canSyncStub, pathStub;
         before(function () {
             urlStub = sinon.stub(location, "setUrl");
+            pathStub = sinon.stub(location, "setPath");
             func = location.socketEvent(bs);
             canSyncStub= sinon.stub(bs, "canSync");
         });
         afterEach(function () {
             urlStub.reset();
             canSyncStub.reset();
+            pathStub.reset();
         });
         after(function () {
             urlStub.restore();
             canSyncStub.restore();
+            pathStub.restore();
         });
         it("should return a function", function () {
             assert.equal(typeof location.socketEvent() === "function", true);
@@ -59,6 +62,11 @@ describe("The location Plugin", function () {
             canSyncStub.returns(false);
             func({url: "/index.html", override: true});
             sinon.assert.calledOnce(urlStub);
+        });
+        it("should set path if data.path is set", function () {
+            canSyncStub.returns(true);
+            func({path: "/form.html", override: true});
+            sinon.assert.calledWithExactly(pathStub, "/form.html");
         });
     });
 });
