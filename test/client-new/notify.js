@@ -12,7 +12,7 @@ describe("The Notify Element", function() {
     });
     it("can be initialised with custom styles", function() {
 
-        bs.opts.notify = {
+        bs.options.notify = {
             styles: [
                 "background-color: yellow",
                 "color: black",

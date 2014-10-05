@@ -6,7 +6,7 @@ var path = require("path");
 var script = path.resolve(__dirname + "/dist/index.min.js");
 
 function init(options, connector, type) {
-
+    
     var result;
 
     if (options && options.minify) {

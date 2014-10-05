@@ -1,5 +1,5 @@
 var __bs_stub__ = {
-    opts: {
+    options: {
         notify: true,
         codeSync: true,
         ghostMode: {

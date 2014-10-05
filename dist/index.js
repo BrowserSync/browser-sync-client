@@ -1,6 +1,109 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
+var socket       = require("./socket");
+var emitter      = require("./emitter");
+var notify       = require("./notify");
+var utils        = require("./browser.utils");
+
+/**
+ * @constructor
+ */
+var BrowserSync = function (options) {
+
+    this.options = options;
+    this.socket  = socket;
+    this.emitter = emitter;
+    this.utils   = utils.utils;
+
+    var _this = this;
+
+    /**
+     * Options set
+     */
+    socket.on("options:set", function (data) {
+        emitter.emit("notify", "Setting options...");
+        _this.options = data.options;
+    });
+};
+
+/**
+ * Helper to check if syncing is allowed
+ * @param data
+ * @param optPath
+ * @returns {boolean}
+ */
+BrowserSync.prototype.canSync = function (data, optPath) {
+
+    data = data || {};
+
+    var canSync = true;
+
+    if (optPath) {
+        canSync = this.getOption(optPath);
+    }
+
+    return canSync && data.url === window.location.pathname;
+};
+
+/**
+ * Helper to check if syncing is allowed
+ * @returns {boolean}
+ */
+BrowserSync.prototype.getOption = function (path) {
+
+    if (path && path.match(/\./)) {
+
+        return getByPath(this.options, path);
+
+    } else {
+
+        var opt = this.options[path];
+
+        if (isUndefined(opt)) {
+            return false;
+        } else {
+            return opt;
+        }
+    }
+};
+
+/**
+ * @type {Function}
+ */
+module.exports = BrowserSync;
+
+/**
+ * @param {String} val
+ * @returns {boolean}
+ */
+function isUndefined(val) {
+
+    return "undefined" === typeof val;
+}
+
+/**
+ * @param obj
+ * @param path
+ */
+function getByPath(obj, path) {
+
+    for(var i = 0, tempPath = path.split("."), len = tempPath.length; i < len; i++){
+        if(!obj || typeof obj !== "object") {
+            return false;
+        }
+        obj = obj[tempPath[i]];
+    }
+
+    if(typeof obj === "undefined") {
+        return false;
+    }
+
+    return obj;
+}
+},{"./browser.utils":2,"./emitter":5,"./notify":16,"./socket":17}],2:[function(require,module,exports){
+"use strict";
+
 /**
  * @returns {window}
  */
@@ -101,7 +204,7 @@ exports.utils = {
         return document.getElementsByTagName("body")[0];
     }
 };
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
 
     Array.prototype.indexOf= function(find, i) {
@@ -122,7 +225,7 @@ if (!("indexOf" in Array.prototype)) {
         return -1;
     };
 }
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 var options = {
@@ -144,6 +247,8 @@ var options = {
 };
 
 var hiddenElem;
+var OPT_PATH = "codeSync";
+var url = window.location.pathname;
 
 /**
  * @param {BrowserSync} bs
@@ -151,17 +256,19 @@ var hiddenElem;
 exports.init = function (bs) {
     bs.socket.on("file:reload", exports.reload(bs));
     bs.socket.on("browser:reload", function () {
-        exports.reloadBrowser(true);
+        if (bs.canSync({url: url}, OPT_PATH)) {
+            exports.reloadBrowser(true);
+        }
     });
 };
 
 /**
  * @param elem
  * @param attr
- * @param opts
+ * @param options
  * @returns {{elem: HTMLElement, timeStamp: number}}
  */
-exports.swapFile = function (elem, attr, opts) {
+exports.swapFile = function (elem, attr, options) {
 
     var currentValue = elem[attr];
     var timeStamp = new Date().getTime();
@@ -173,8 +280,8 @@ exports.swapFile = function (elem, attr, opts) {
         currentValue = justUrl[0];
     }
 
-    if (opts) {
-        if (!opts.timestamps) {
+    if (options) {
+        if (!options.timestamps) {
             suffix = "";
         }
     }
@@ -212,11 +319,14 @@ exports.reload = function (bs) {
      */
     return function (data) {
 
+        if (!bs.canSync({url:url}, OPT_PATH)) {
+            return;
+        }
         var transformedElem;
-        var opts    = bs.opts;
+        var options    = bs.options;
         var emitter = bs.emitter;
 
-        if (data.url || !opts.injectChanges) {
+        if (data.url || !options.injectChanges) {
             exports.reloadBrowser(true);
         }
 
@@ -225,12 +335,12 @@ exports.reload = function (bs) {
             var domData = exports.getElems(data.fileExtension);
             var elems   = exports.getMatches(domData.elems, data.assetFileName, domData.attr);
 
-            if (elems.length && opts.notify) {
+            if (elems.length && options.notify) {
                 emitter.emit("notify", {message: "Injected: " + data.assetFileName});
             }
 
             for (var i = 0, n = elems.length; i < n; i += 1) {
-                transformedElem = exports.swapFile(elems[i], domData.attr, opts);
+                transformedElem = exports.swapFile(elems[i], domData.attr, options);
             }
         }
 
@@ -304,7 +414,7 @@ exports.reloadBrowser = function (confirm) {
         $window.location.reload(true);
     }
 };
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 exports.events = {};
@@ -338,7 +448,7 @@ exports.on = function (name, func) {
         events[name].listeners.push(func);
     }
 };
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 exports._ElementCache = function () {
 
     var cache = {},
@@ -618,67 +728,46 @@ exports.manager = eventManager;
 
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
-var socket    = require("./socket");
-var shims     = require("./client-shims");
-var notify    = require("./notify");
-var codeSync  = require("./code-sync");
-var ghostMode = require("./ghostmode");
-var emitter   = require("./emitter");
-var utils     = require("./browser.utils");
+var socket       = require("./socket");
+var shims        = require("./client-shims");
+var notify       = require("./notify");
+var codeSync     = require("./code-sync");
+var BrowserSync  = require("./browser-sync");
+var ghostMode    = require("./ghostmode");
+var emitter      = require("./emitter");
+var utils        = require("./browser.utils");
 
 /**
- * @constructor
+ * @param options
  */
-var BrowserSync = function () {
-    this.socket  = socket;
-    this.emitter = emitter;
-    this.utils   = utils.utils;
-};
-
-/**
- * Helper to check if syncing is allowed
- * @param data
- * @returns {boolean}
- */
-BrowserSync.prototype.canSync = function (data) {
-    return data.url === window.location.pathname;
-};
-
-var bs;
-
-/**
- * @param opts
- */
-exports.init = function (opts) {
+exports.init = function (options) {
 
     var BS = window.___browserSync___ || {};
     if (!BS.client) {
 
         BS.client = true;
 
-        bs      = new BrowserSync();
-        bs.opts = opts;
-
-        if (opts.notify) {
-            notify.init(bs);
+        var browserSync = new BrowserSync(options);
+        
+        if (options.notify) {
             notify.flash("Connected to BrowserSync");
         }
 
-        if (opts.ghostMode) {
-            ghostMode.init(bs);
-        }
-
-        if (opts.codeSync) {
-            codeSync.init(bs);
-        }
+        // Always init on page load
+        notify.init(browserSync);
+        ghostMode.init(browserSync);
+        codeSync.init(browserSync);
     }
-
 };
 
+/**
+ * Handle individual socket connections
+ */
 socket.on("connection", exports.init);
+
 
 /**debug:start**/
 if (window.__karma__) {
@@ -691,6 +780,7 @@ if (window.__karma__) {
     window.__bs_forms__      = require("./ghostmode.forms");
     window.__bs_utils__      = require("./browser.utils");
     window.__bs_emitter__    = emitter;
+    window.__bs              = BrowserSync;
     window.__bs_notify__     = notify;
     window.__bs_code_sync__  = codeSync;
     window.__bs_ghost_mode__ = ghostMode;
@@ -698,7 +788,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":15,"./socket":16}],7:[function(require,module,exports){
+},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./ghostmode":13,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12,"./ghostmode.location":14,"./ghostmode.scroll":15,"./notify":16,"./socket":17}],8:[function(require,module,exports){
 "use strict";
 
 /**
@@ -706,6 +796,7 @@ if (window.__karma__) {
  * @type {string}
  */
 var EVENT_NAME  = "click";
+var OPT_PATH    = "ghostMode.clicks";
 exports.canEmitEvents = true;
 
 /**
@@ -752,7 +843,7 @@ exports.socketEvent = function (bs, eventManager) {
 
     return function (data) {
 
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
 
             var elem = bs.utils.getSingleElement(data.tagName, data.index);
 
@@ -763,7 +854,7 @@ exports.socketEvent = function (bs, eventManager) {
         }
     };
 };
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -771,6 +862,7 @@ exports.socketEvent = function (bs, eventManager) {
  * @type {string}
  */
 var EVENT_NAME  = "input:text";
+var OPT_PATH    = "ghostMode.forms.inputs";
 exports.canEmitEvents = true;
 
 /**
@@ -817,7 +909,7 @@ exports.socketEvent = function (bs) {
 
     return function (data) {
 
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
 
             var elem = bs.utils.getSingleElement(data.tagName, data.index);
 
@@ -830,7 +922,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 exports.plugins = {
@@ -846,9 +938,9 @@ exports.plugins = {
 exports.init = function (bs, eventManager) {
 
     var checkOpt = true;
-    var opts = bs.opts.ghostMode.forms;
+    var options = bs.options.ghostMode.forms;
 
-    if (opts === true) {
+    if (options === true) {
         checkOpt = false;
     }
 
@@ -860,13 +952,13 @@ exports.init = function (bs, eventManager) {
         if (!checkOpt) {
             init(name);
         } else {
-            if (opts[name]) {
+            if (options[name]) {
                 init(name);
             }
         }
     }
 };
-},{"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11}],10:[function(require,module,exports){
+},{"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -874,6 +966,7 @@ exports.init = function (bs, eventManager) {
  * @type {string}
  */
 var EVENT_NAME  = "form:submit";
+var OPT_PATH    = "ghostMode.forms.submit";
 exports.canEmitEvents = true;
 
 /**
@@ -912,7 +1005,7 @@ exports.browserEvent = function (bs) {
 exports.socketEvent = function (bs) {
 
     return function (data) {
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
             var elem = bs.utils.getSingleElement(data.tagName, data.index);
             exports.canEmitEvents = false;
             if (elem && data.type === "submit") {
@@ -926,7 +1019,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -934,6 +1027,7 @@ exports.socketEvent = function (bs) {
  * @type {string}
  */
 var EVENT_NAME  = "input:toggles";
+var OPT_PATH    = "ghostMode.forms.toggles";
 exports.canEmitEvents = true;
 
 /**
@@ -998,7 +1092,7 @@ exports.socketEvent = function (bs) {
 
     return function (data) {
 
-        if (bs.canSync(data)) {
+        if (bs.canSync(data, OPT_PATH)) {
 
             exports.canEmitEvents = false;
 
@@ -1022,7 +1116,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 var eventManager = require("./events").manager;
@@ -1039,27 +1133,19 @@ exports.plugins = {
  * @param bs
  */
 exports.init = function (bs) {
-
-    var ghostMode = bs.opts.ghostMode;
-
-    function init(name) {
+    for (var name in exports.plugins) {
         exports.plugins[name].init(bs, eventManager);
     }
-
-    for (var name in exports.plugins) {
-        if (ghostMode[name]) {
-            init(name);
-        }
-    }
 };
-},{"./events":5,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14}],13:[function(require,module,exports){
+},{"./events":6,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.location":14,"./ghostmode.scroll":15}],14:[function(require,module,exports){
 "use strict";
 
 /**
  * This is the plugin for syncing location
  * @type {string}
  */
-var EVENT_NAME = "location";
+var EVENT_NAME = "browser:location";
+var OPT_PATH   = "ghostMode.location";
 exports.canEmitEvents = true;
 
 /**
@@ -1072,12 +1158,32 @@ exports.init = function (bs) {
 /**
  * Respond to socket event
  */
-exports.socketEvent = function () {
+exports.socketEvent = function (bs) {
     return function (data) {
-        window.location = data.url;
+        if (data.override || bs.canSync(data, OPT_PATH)) {
+            if (data.path) {
+                exports.setPath(data.path);
+            } else {
+                exports.setUrl(data.url);
+            }
+        }
     };
 };
-},{}],14:[function(require,module,exports){
+
+/**
+ * @param url
+ */
+exports.setUrl = function (url) {
+    window.location = url;
+};
+
+/**
+ * @param path
+ */
+exports.setPath = function (path) {
+    window.location.pathname = path;
+};
+},{}],15:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1085,6 +1191,7 @@ exports.socketEvent = function () {
  * @type {string}
  */
 var EVENT_NAME = "scroll";
+var OPT_PATH   = "ghostMode.scroll";
 var utils;
 
 exports.canEmitEvents = true;
@@ -1110,11 +1217,11 @@ exports.socketEvent = function (bs) {
 
         exports.canEmitEvents = false;
 
-        if (!bs.canSync(data)) {
+        if (!bs.canSync(data, OPT_PATH)) {
             return false;
         }
 
-        if (bs.opts && bs.opts.scrollProportionally) {
+        if (bs.options && bs.options.scrollProportionally) {
             return window.scrollTo(0, scrollSpace.y * data.position.proportional); // % of y axis of scroll to px
         } else {
             return window.scrollTo(0, data.position.raw);
@@ -1178,7 +1285,7 @@ exports.getScrollTopPercentage = function (pos) {
     var percentage  = exports.getScrollPercentage(scrollSpace, pos);
     return percentage.y;
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 var scroll = require("./ghostmode.scroll");
@@ -1212,7 +1319,7 @@ var timeoutInt;
 exports.init = function (bs) {
 
     browserSync = bs;
-    options = bs.opts;
+    options = bs.options;
 
     var cssStyles = styles;
 
@@ -1238,6 +1345,9 @@ exports.init = function (bs) {
  */
 exports.watchEvent = function () {
     return function (data) {
+        if (typeof data === "string") {
+            return exports.flash(data);
+        }
         exports.flash(data.message, data.timeout);
     };
 };
@@ -1284,7 +1394,7 @@ exports.flash = function (message, timeout) {
 
     return elem;
 };
-},{"./ghostmode.scroll":14}],16:[function(require,module,exports){
+},{"./ghostmode.scroll":15}],17:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1325,4 +1435,4 @@ exports.emit = function (name, data) {
 exports.on = function (name, func) {
     exports.socket.on(name, func);
 };
-},{}]},{},[6])
+},{}]},{},[7])

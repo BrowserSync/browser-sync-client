@@ -36,7 +36,7 @@ gulp.task('lint-test', function () {
 });
 
 gulp.task('lint-lib', function () {
-    gulp.src(['lib/*', '!lib/browser-sync-client.js', '!lib/events.js'])
+    return gulp.src(['lib/*', '!lib/browser-sync-client.js', '!lib/events.js'])
         .pipe(jshint('lib/.jshintrc'))
         .pipe(jshint.reporter("default"))
         .pipe(jshint.reporter("fail"))
