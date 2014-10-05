@@ -59,6 +59,24 @@ exports.utils = {
         };
     },
     /**
+     * Saves scroll position into cookies
+     */
+    saveScrollPosition: function () {
+        var pos = exports.utils.getBrowserScrollPosition();
+
+        pos = [pos.x, pos.y];
+
+        document.cookie = "bs_scroll_pos=" + pos.join(",");
+    },
+    /**
+     * Restores scroll position from cookies
+     */
+    restoreScrollPosition: function () {
+        var pos = document.cookie.replace(/(?:(?:^|.*;\s*)bs_scroll_pos\s*\=\s*([^;]*).*$)|^.*$/, "$1").split(",");
+
+        window.scrollTo(pos[0], pos[1]);
+    },
+    /**
      * @param tagName
      * @param elem
      * @returns {*|number}
@@ -628,6 +646,7 @@ var codeSync  = require("./code-sync");
 var ghostMode = require("./ghostmode");
 var emitter   = require("./emitter");
 var utils     = require("./browser.utils");
+var events    = require("./events");
 
 /**
  * @constructor
@@ -678,6 +697,18 @@ exports.init = function (opts) {
 
 };
 
+if (document.readyState === "complete") {
+    utils.utils.restoreScrollPosition();
+} else {
+    events.manager.addEvent(document, "readystatechange", function() {
+        if (document.readyState === "complete") {
+            utils.utils.restoreScrollPosition();
+        }
+    });
+}
+
+events.manager.addEvent(window, "beforeunload", utils.utils.saveScrollPosition);
+
 socket.on("connection", exports.init);
 
 /**debug:start**/
@@ -698,7 +729,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":15,"./socket":16}],7:[function(require,module,exports){
+},{"./browser.utils":1,"./client-shims":2,"./code-sync":3,"./emitter":4,"./events":5,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":15,"./socket":16}],7:[function(require,module,exports){
 "use strict";
 
 /**
