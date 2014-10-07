@@ -81,8 +81,8 @@ describe("Generic Browser utils", function(){
         });
         it("should return x & y values", function(){
             var actual = act();
-            assert.equal(actual.x, 200);
-            assert.equal(actual.y, 400);
+            assert.equal(actual.x, 460);
+            assert.equal(actual.y, 831);
         });
     });
     describe("getting a single element", function(){
