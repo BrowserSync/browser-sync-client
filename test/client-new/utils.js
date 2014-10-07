@@ -59,32 +59,32 @@ describe("Generic Browser utils", function(){
         });
 
     });
-    // describe("getScrollSpace(): 1", function () {
-    //     var act;
-    //     var documentStub;
-    //     before(function () {
-    //         act = function () {
-    //             return browserUtils.utils.getScrollSpace();
-    //         };
-    //         documentStub = sinon.stub(browserUtils, "getDocument").returns({
-    //             documentElement: {
-    //                 clientWidth: 800,
-    //                 clientHeight: 600
-    //             },
-    //             body: {
-    //                 scrollHeight: 1000
-    //             }
-    //         });
-    //     });
-    //     after(function () {
-    //         documentStub.restore();
-    //     });
-    //     it("should return x & y values", function(){
-    //         var actual = act();
-    //         assert.equal(actual.x, 200);
-    //         assert.equal(actual.y, 400);
-    //     });
-    // });
+    describe("getScrollSpace(): 1", function () {
+        var act;
+        var documentStub;
+        before(function () {
+            act = function () {
+                return browserUtils.utils.getScrollSpace();
+            };
+            documentStub = sinon.stub(browserUtils, "getDocument").returns({
+                documentElement: {
+                    clientWidth: 800,
+                    clientHeight: 600
+                },
+                body: {
+                    scrollHeight: 1000
+                }
+            });
+        });
+        after(function () {
+            documentStub.restore();
+        });
+        it("should return x & y values", function(){
+            var actual = act();
+            assert.equal(actual.x, 460);
+            assert.equal(actual.y, 831);
+        });
+    });
     describe("getting a single element", function(){
         var fakeElems = [
             {
