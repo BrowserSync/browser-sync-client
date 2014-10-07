@@ -156,9 +156,22 @@ exports.utils = {
         var $document = exports.getDocument();
         var dElement = $document.documentElement;
         var dBody    = $document.body;
+        var D = document;
+        // fix webkit vs other browsers document.body.scrollHeight measurement inconsistencies
+        // credit goes to: http://stackoverflow.com/a/15935454
+        var docHeight = Math.max(
+            Math.max(D.body.scrollHeight, D.documentElement.scrollHeight),
+            Math.max(D.body.offsetHeight, D.documentElement.offsetHeight),
+            Math.max(D.body.clientHeight, D.documentElement.clientHeight)
+        );
+        var docWidth = Math.max(
+            Math.max(D.body.scrollWidth, D.documentElement.scrollWidth),
+            Math.max(D.body.offsetWidth, D.documentElement.offsetWidth),
+            Math.max(D.body.clientWidth, D.documentElement.clientWidth)
+        );
         return {
-            x: dBody.scrollHeight - dElement.clientWidth,
-            y: dBody.scrollHeight - dElement.clientHeight
+            x: docWidth - dElement.clientWidth,
+            y: docHeight - dElement.clientHeight
         };
     },
     /**
