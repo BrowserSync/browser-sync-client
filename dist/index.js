@@ -248,7 +248,10 @@ var options = {
 
 var hiddenElem;
 var OPT_PATH = "codeSync";
-var url = window.location.pathname;
+
+var current = function () {
+    return window.location.pathname;
+};
 
 /**
  * @param {BrowserSync} bs
@@ -256,7 +259,7 @@ var url = window.location.pathname;
 exports.init = function (bs) {
     bs.socket.on("file:reload", exports.reload(bs));
     bs.socket.on("browser:reload", function () {
-        if (bs.canSync({url: url}, OPT_PATH)) {
+        if (bs.canSync({url: current()}, OPT_PATH)) {
             exports.reloadBrowser(true);
         }
     });
@@ -319,7 +322,7 @@ exports.reload = function (bs) {
      */
     return function (data) {
 
-        if (!bs.canSync({url:url}, OPT_PATH)) {
+        if (!bs.canSync({url: current()}, OPT_PATH)) {
             return;
         }
         var transformedElem;
