@@ -202,6 +202,12 @@ exports.utils = {
      */
     getBody: function () {
         return document.getElementsByTagName("body")[0];
+    },
+    /**
+     *
+     */
+    reloadBrowser: function () {
+        exports.getWindow().location.reload(true);
     }
 };
 },{}],3:[function(require,module,exports){
@@ -741,12 +747,18 @@ var codeSync     = require("./code-sync");
 var BrowserSync  = require("./browser-sync");
 var ghostMode    = require("./ghostmode");
 var emitter      = require("./emitter");
-var utils        = require("./browser.utils");
+var utils        = require("./browser.utils").utils;
+
+var shouldReload = false;
 
 /**
  * @param options
  */
 exports.init = function (options) {
+
+    if (shouldReload) {
+        utils.reloadBrowser();
+    }
 
     var BS = window.___browserSync___ || {};
     if (!BS.client) {
@@ -759,7 +771,6 @@ exports.init = function (options) {
         ghostMode.init(browserSync);
         codeSync.init(browserSync);
 
-
         if (options.notify) {
             notify.init(browserSync);
             notify.flash("Connected to BrowserSync");
@@ -771,6 +782,10 @@ exports.init = function (options) {
  * Handle individual socket connections
  */
 socket.on("connection", exports.init);
+socket.on("disconnect", function () {
+    notify.flash("Disconnected From BrowserSync");
+    shouldReload = true;
+});
 
 
 /**debug:start**/
