@@ -163,5 +163,17 @@ describe("Code Sync", function() {
             assert.equal(actual.attr, "href");
             elemStub.restore();
         });
+        it("should handle filenames with regexes", function () {
+            var input    = "http://localhost:8080/style.css?rel=123343";
+            var expected = "http://localhost:8080/style.css";
+            var actual   = codeSync.getFilenameOnly(input);
+            assert.equal(actual[0], expected);
+        });
+        it.skip("should handle filenames with regexes with multiple ?", function () {
+            var input    = "http://localhost.com/??/style.css";
+            var expected = "http://localhost:8080/style.css";
+            var actual   = codeSync.getFilenameOnly(input);
+            assert.equal(actual[0], expected);
+        });
     });
 });
