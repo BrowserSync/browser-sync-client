@@ -338,7 +338,7 @@ exports.swapFile = function (elem, attr, options) {
     var timeStamp = new Date().getTime();
     var suffix = "?rel=" + timeStamp;
 
-    var justUrl = /^[^\?]+(?=\?)/.exec(currentValue);
+    var justUrl = exports.getFilenameOnly(currentValue);
 
     if (justUrl) {
         currentValue = justUrl[0];
@@ -352,24 +352,26 @@ exports.swapFile = function (elem, attr, options) {
 
     elem[attr] = currentValue + suffix;
 
-
     var body = document.body;
 
-        setTimeout(function () {
-            if (!hiddenElem) {
-                hiddenElem = document.createElement("DIV");
-                body.appendChild(hiddenElem);
-            } else {
-                hiddenElem.style.display = "none";
-                hiddenElem.style.display = "block";
-            }
-        }, 200);
-
+    setTimeout(function () {
+        if (!hiddenElem) {
+            hiddenElem = document.createElement("DIV");
+            body.appendChild(hiddenElem);
+        } else {
+            hiddenElem.style.display = "none";
+            hiddenElem.style.display = "block";
+        }
+    }, 200);
 
     return {
         elem: elem,
         timeStamp: timeStamp
     };
+};
+
+exports.getFilenameOnly = function (url) {
+    return /^[^\?]+(?=\?)/.exec(url);
 };
 
 /**
