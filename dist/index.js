@@ -162,6 +162,21 @@ exports.utils = {
         };
     },
     /**
+     * Saves scroll position into cookies
+     */
+    saveScrollPosition: function () {
+        var pos = exports.utils.getBrowserScrollPosition();
+        pos = [pos.x, pos.y];
+        document.cookie = "bs_scroll_pos=" + pos.join(",");
+    },
+    /**
+     * Restores scroll position from cookies
+     */
+    restoreScrollPosition: function () {
+        var pos = document.cookie.replace(/(?:(?:^|.*;\s*)bs_scroll_pos\s*\=\s*([^;]*).*$)|^.*$/, "$1").split(",");
+        window.scrollTo(pos[0], pos[1]);
+    },
+    /**
      * @param tagName
      * @param elem
      * @returns {*|number}
@@ -208,6 +223,15 @@ exports.utils = {
      */
     reloadBrowser: function () {
         exports.getWindow().location.reload(true);
+    },
+    getWindow:   exports.getWindow,
+    getDocument: exports.getDocument,
+    /**
+     * Are we dealing with old IE?
+     * @returns {boolean}
+     */
+    isOldIe: function () {
+        return typeof window.attachEvent !== "undefined";
     }
 };
 },{}],3:[function(require,module,exports){
@@ -233,6 +257,8 @@ if (!("indexOf" in Array.prototype)) {
 }
 },{}],4:[function(require,module,exports){
 "use strict";
+var events = require("./events");
+var utils  = require("./browser.utils").utils;
 
 var options = {
 
@@ -263,12 +289,37 @@ var current = function () {
  * @param {BrowserSync} bs
  */
 exports.init = function (bs) {
+    exports.saveScroll(utils.getWindow(), utils.getDocument());
     bs.socket.on("file:reload", exports.reload(bs));
     bs.socket.on("browser:reload", function () {
         if (bs.canSync({url: current()}, OPT_PATH)) {
             exports.reloadBrowser(true);
         }
     });
+};
+
+/**
+ * Use a cookie-drop to save scroll position of
+ * @param $window
+ * @param $document
+ */
+exports.saveScroll = function ($window, $document) {
+
+    if (!utils.isOldIe()) {
+        return;
+    }
+
+    if ($document.readyState === "complete") {
+        utils.restoreScrollPosition();
+    } else {
+        events.manager.addEvent($document, "readystatechange", function() {
+            if ($document.readyState === "complete") {
+                utils.restoreScrollPosition();
+            }
+        });
+    }
+
+    events.manager.addEvent(window, "beforeunload", utils.saveScrollPosition);
 };
 
 /**
@@ -423,7 +474,7 @@ exports.reloadBrowser = function (confirm) {
         $window.location.reload(true);
     }
 };
-},{}],5:[function(require,module,exports){
+},{"./browser.utils":2,"./events":6}],5:[function(require,module,exports){
 "use strict";
 
 exports.events = {};
@@ -747,6 +798,7 @@ var codeSync     = require("./code-sync");
 var BrowserSync  = require("./browser-sync");
 var ghostMode    = require("./ghostmode");
 var emitter      = require("./emitter");
+var events       = require("./events");
 var utils        = require("./browser.utils").utils;
 
 var shouldReload = false;
@@ -807,7 +859,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./ghostmode":13,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12,"./ghostmode.location":14,"./ghostmode.scroll":15,"./notify":16,"./socket":17}],8:[function(require,module,exports){
+},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./events":6,"./ghostmode":13,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12,"./ghostmode.location":14,"./ghostmode.scroll":15,"./notify":16,"./socket":17}],8:[function(require,module,exports){
 "use strict";
 
 /**
