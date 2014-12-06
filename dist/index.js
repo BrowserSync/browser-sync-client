@@ -1253,7 +1253,7 @@ exports.setUrl = function (url) {
  * @param path
  */
 exports.setPath = function (path) {
-    window.location.pathname = path;
+    window.location = window.location.protocol + "//" + window.location.host + path;
 };
 },{}],15:[function(require,module,exports){
 "use strict";
