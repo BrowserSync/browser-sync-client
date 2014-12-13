@@ -765,18 +765,19 @@ exports.triggerClick = function (elem) {
     var evObj;
 
     if (document.createEvent) {
-
-        evObj = document.createEvent("MouseEvents");
-        evObj.initEvent("click", true, true);
-        elem.dispatchEvent(evObj);
-
+        window.setTimeout(function () {
+            evObj = document.createEvent("MouseEvents");
+            evObj.initEvent("click", true, true);
+            elem.dispatchEvent(evObj);
+        }, 0);
     } else {
-
-        if (document.createEventObject) {
-            evObj = document.createEventObject();
-            evObj.cancelBubble = true;
-            elem.fireEvent("on" + "click", evObj);
-        }
+        window.setTimeout(function () {
+            if (document.createEventObject) {
+                evObj = document.createEventObject();
+                evObj.cancelBubble = true;
+                elem.fireEvent("on" + "click", evObj);
+            }
+        }, 0);
     }
 };
 
@@ -1254,7 +1255,7 @@ exports.setUrl = function (url) {
  * @param path
  */
 exports.setPath = function (path) {
-    window.location.pathname = path;
+    window.location = window.location.protocol + "//" + window.location.host + path;
 };
 },{}],15:[function(require,module,exports){
 "use strict";
