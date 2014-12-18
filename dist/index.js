@@ -803,11 +803,13 @@ var events       = require("./events");
 var utils        = require("./browser.utils").utils;
 
 var shouldReload = false;
+var reloadOnDisconnect = true;
 
 /**
  * @param options
  */
 exports.init = function (options) {
+    reloadOnDisconnect = !options.noReload;
 
     if (shouldReload) {
         utils.reloadBrowser();
@@ -835,9 +837,9 @@ exports.init = function (options) {
  * Handle individual socket connections
  */
 socket.on("connection", exports.init);
-socket.on("disconnect", function () {
-    notify.flash("Disconnected From BrowserSync");
-    shouldReload = true;
+socket.on("disconnect", function (e) {
+    notify.flash("Disconnected from BrowserSync" + (reloadOnDisconnect ? ", reloading..." : ""));
+    shouldReload = reloadOnDisconnect;
 });
 
 
