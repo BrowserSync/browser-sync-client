@@ -809,7 +809,7 @@ var shouldReload = false;
  */
 exports.init = function (options) {
 
-    if (shouldReload) {
+    if (shouldReload && options.reloadOnRestart) {
         utils.reloadBrowser();
     }
 
