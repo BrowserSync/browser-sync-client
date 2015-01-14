@@ -37,6 +37,10 @@ BrowserSync.prototype.canSync = function (data, optPath) {
 
     data = data || {};
 
+    if (data.override) {
+        return true;
+    }
+
     var canSync = true;
 
     if (optPath) {
@@ -808,7 +812,6 @@ var shouldReload = false;
  * @param options
  */
 exports.init = function (options) {
-
     if (shouldReload && options.reloadOnRestart) {
         utils.reloadBrowser();
     }
@@ -836,7 +839,7 @@ exports.init = function (options) {
  */
 socket.on("connection", exports.init);
 socket.on("disconnect", function () {
-    notify.flash("Disconnected From BrowserSync");
+    notify.flash("Disconnected from BrowserSync");
     shouldReload = true;
 });
 
@@ -915,14 +918,15 @@ exports.socketEvent = function (bs, eventManager) {
 
     return function (data) {
 
-        if (bs.canSync(data, OPT_PATH)) {
+        if (!bs.canSync(data, OPT_PATH)) {
+            return false;
+        }
 
-            var elem = bs.utils.getSingleElement(data.tagName, data.index);
+        var elem = bs.utils.getSingleElement(data.tagName, data.index);
 
-            if (elem) {
-                exports.canEmitEvents = false;
-                eventManager.triggerClick(elem);
-            }
+        if (elem) {
+            exports.canEmitEvents = false;
+            eventManager.triggerClick(elem);
         }
     };
 };
@@ -981,14 +985,15 @@ exports.socketEvent = function (bs) {
 
     return function (data) {
 
-        if (bs.canSync(data, OPT_PATH)) {
+        if (!bs.canSync(data, OPT_PATH)) {
+            return false;
+        }
 
-            var elem = bs.utils.getSingleElement(data.tagName, data.index);
+        var elem = bs.utils.getSingleElement(data.tagName, data.index);
 
-            if (elem) {
-                elem.value = data.value;
-                return elem;
-            }
+        if (elem) {
+            elem.value = data.value;
+            return elem;
         }
 
         return false;
@@ -1077,16 +1082,21 @@ exports.browserEvent = function (bs) {
 exports.socketEvent = function (bs) {
 
     return function (data) {
-        if (bs.canSync(data, OPT_PATH)) {
-            var elem = bs.utils.getSingleElement(data.tagName, data.index);
-            exports.canEmitEvents = false;
-            if (elem && data.type === "submit") {
-                elem.submit();
-            }
-            if (elem && data.type === "reset") {
-                elem.reset();
-            }
+
+        if (!bs.canSync(data, OPT_PATH)) {
             return false;
+        }
+
+        var elem = bs.utils.getSingleElement(data.tagName, data.index);
+
+        exports.canEmitEvents = false;
+
+        if (elem && data.type === "submit") {
+            elem.submit();
+        }
+
+        if (elem && data.type === "reset") {
+            elem.reset();
         }
         return false;
     };
@@ -1164,27 +1174,26 @@ exports.socketEvent = function (bs) {
 
     return function (data) {
 
-        if (bs.canSync(data, OPT_PATH)) {
-
-            exports.canEmitEvents = false;
-
-            var elem = bs.utils.getSingleElement(data.tagName, data.index);
-
-            if (elem) {
-                if (data.type === "radio") {
-                    elem.checked = true;
-                }
-                if (data.type === "checkbox") {
-                    elem.checked = data.checked;
-                }
-                if (data.tagName === "SELECT") {
-                    elem.value = data.value;
-                }
-                return elem;
-            }
+        if (!bs.canSync(data, OPT_PATH)) {
             return false;
         }
 
+        exports.canEmitEvents = false;
+
+        var elem = bs.utils.getSingleElement(data.tagName, data.index);
+
+        if (elem) {
+            if (data.type === "radio") {
+                elem.checked = true;
+            }
+            if (data.type === "checkbox") {
+                elem.checked = data.checked;
+            }
+            if (data.tagName === "SELECT") {
+                elem.value = data.value;
+            }
+            return elem;
+        }
         return false;
     };
 };
@@ -1224,20 +1233,24 @@ exports.canEmitEvents = true;
  * @param {BrowserSync} bs
  */
 exports.init = function (bs) {
-    bs.socket.on(EVENT_NAME, exports.socketEvent());
+    bs.socket.on(EVENT_NAME, exports.socketEvent(bs));
 };
 
 /**
  * Respond to socket event
  */
 exports.socketEvent = function (bs) {
+
     return function (data) {
-        if (data.override || bs.canSync(data, OPT_PATH)) {
-            if (data.path) {
-                exports.setPath(data.path);
-            } else {
-                exports.setUrl(data.url);
-            }
+
+        if (!bs.canSync(data, OPT_PATH)) {
+            return false;
+        }
+
+        if (data.path) {
+            exports.setPath(data.path);
+        } else {
+            exports.setUrl(data.url);
         }
     };
 };
@@ -1285,13 +1298,13 @@ exports.socketEvent = function (bs) {
 
     return function (data) {
 
-        var scrollSpace = utils.getScrollSpace();
-
-        exports.canEmitEvents = false;
-
         if (!bs.canSync(data, OPT_PATH)) {
             return false;
         }
+
+        var scrollSpace = utils.getScrollSpace();
+
+        exports.canEmitEvents = false;
 
         if (bs.options && bs.options.scrollProportionally) {
             return window.scrollTo(0, scrollSpace.y * data.position.proportional); // % of y axis of scroll to px
