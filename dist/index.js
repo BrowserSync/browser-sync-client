@@ -1,4 +1,73 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+"use strict";
+
+var socket       = require("./socket");
+var shims        = require("./client-shims");
+var notify       = require("./notify");
+var codeSync     = require("./code-sync");
+var BrowserSync  = require("./browser-sync");
+var ghostMode    = require("./ghostmode");
+var emitter      = require("./emitter");
+var events       = require("./events");
+var utils        = require("./browser.utils").utils;
+
+var shouldReload = false;
+
+/**
+ * @param options
+ */
+exports.init = function (options) {
+    if (shouldReload && options.reloadOnRestart) {
+        utils.reloadBrowser();
+    }
+
+    var BS = window.___browserSync___ || {};
+    if (!BS.client) {
+
+        BS.client = true;
+
+        var browserSync = new BrowserSync(options);
+
+        // Always init on page load
+        ghostMode.init(browserSync);
+        codeSync.init(browserSync);
+
+        if (options.notify) {
+            notify.init(browserSync);
+            notify.flash("Connected to BrowserSync");
+        }
+    }
+};
+
+/**
+ * Handle individual socket connections
+ */
+socket.on("connection", exports.init);
+socket.on("disconnect", function () {
+    notify.flash("Disconnected from BrowserSync");
+    shouldReload = true;
+});
+
+/**debug:start**/
+if (window.__karma__) {
+    window.__bs_scroll__     = require("./ghostmode.scroll");
+    window.__bs_clicks__     = require("./ghostmode.clicks");
+    window.__bs_location__   = require("./ghostmode.location");
+    window.__bs_inputs__     = require("./ghostmode.forms.input");
+    window.__bs_toggles__    = require("./ghostmode.forms.toggles");
+    window.__bs_submit__     = require("./ghostmode.forms.submit");
+    window.__bs_forms__      = require("./ghostmode.forms");
+    window.__bs_utils__      = require("./browser.utils");
+    window.__bs_emitter__    = emitter;
+    window.__bs              = BrowserSync;
+    window.__bs_notify__     = notify;
+    window.__bs_code_sync__  = codeSync;
+    window.__bs_ghost_mode__ = ghostMode;
+    window.__bs_socket__     = socket;
+    window.__bs_index__      = exports;
+}
+/**debug:end**/
+},{"./browser-sync":2,"./browser.utils":3,"./client-shims":4,"./code-sync":5,"./emitter":6,"./events":7,"./ghostmode":13,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12,"./ghostmode.location":14,"./ghostmode.scroll":15,"./notify":16,"./socket":17}],2:[function(require,module,exports){
 "use strict";
 
 var socket       = require("./socket");
@@ -105,7 +174,7 @@ function getByPath(obj, path) {
 
     return obj;
 }
-},{"./browser.utils":2,"./emitter":5,"./notify":16,"./socket":17}],2:[function(require,module,exports){
+},{"./browser.utils":3,"./emitter":6,"./notify":16,"./socket":17}],3:[function(require,module,exports){
 "use strict";
 
 /**
@@ -238,7 +307,7 @@ exports.utils = {
         return typeof window.attachEvent !== "undefined";
     }
 };
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
 
     Array.prototype.indexOf= function(find, i) {
@@ -259,7 +328,7 @@ if (!("indexOf" in Array.prototype)) {
         return -1;
     };
 }
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 var events = require("./events");
 var utils  = require("./browser.utils").utils;
@@ -480,7 +549,7 @@ exports.reloadBrowser = function (confirm) {
         $window.location.reload(true);
     }
 };
-},{"./browser.utils":2,"./events":6}],5:[function(require,module,exports){
+},{"./browser.utils":3,"./events":7}],6:[function(require,module,exports){
 "use strict";
 
 exports.events = {};
@@ -514,7 +583,7 @@ exports.on = function (name, func) {
         events[name].listeners.push(func);
     }
 };
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 exports._ElementCache = function () {
 
     var cache = {},
@@ -795,77 +864,7 @@ exports.manager = eventManager;
 
 
 
-},{}],7:[function(require,module,exports){
-"use strict";
-
-var socket       = require("./socket");
-var shims        = require("./client-shims");
-var notify       = require("./notify");
-var codeSync     = require("./code-sync");
-var BrowserSync  = require("./browser-sync");
-var ghostMode    = require("./ghostmode");
-var emitter      = require("./emitter");
-var events       = require("./events");
-var utils        = require("./browser.utils").utils;
-
-var shouldReload = false;
-
-/**
- * @param options
- */
-exports.init = function (options) {
-    if (shouldReload && options.reloadOnRestart) {
-        utils.reloadBrowser();
-    }
-
-    var BS = window.___browserSync___ || {};
-    if (!BS.client) {
-
-        BS.client = true;
-
-        var browserSync = new BrowserSync(options);
-
-        // Always init on page load
-        ghostMode.init(browserSync);
-        codeSync.init(browserSync);
-
-        if (options.notify) {
-            notify.init(browserSync);
-            notify.flash("Connected to BrowserSync");
-        }
-    }
-};
-
-/**
- * Handle individual socket connections
- */
-socket.on("connection", exports.init);
-socket.on("disconnect", function () {
-    notify.flash("Disconnected from BrowserSync");
-    shouldReload = true;
-});
-
-
-/**debug:start**/
-if (window.__karma__) {
-    window.__bs_scroll__     = require("./ghostmode.scroll");
-    window.__bs_clicks__     = require("./ghostmode.clicks");
-    window.__bs_location__   = require("./ghostmode.location");
-    window.__bs_inputs__     = require("./ghostmode.forms.input");
-    window.__bs_toggles__    = require("./ghostmode.forms.toggles");
-    window.__bs_submit__     = require("./ghostmode.forms.submit");
-    window.__bs_forms__      = require("./ghostmode.forms");
-    window.__bs_utils__      = require("./browser.utils");
-    window.__bs_emitter__    = emitter;
-    window.__bs              = BrowserSync;
-    window.__bs_notify__     = notify;
-    window.__bs_code_sync__  = codeSync;
-    window.__bs_ghost_mode__ = ghostMode;
-    window.__bs_socket__     = socket;
-    window.__bs_index__      = exports;
-}
-/**debug:end**/
-},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./events":6,"./ghostmode":13,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12,"./ghostmode.location":14,"./ghostmode.scroll":15,"./notify":16,"./socket":17}],8:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1220,7 +1219,7 @@ exports.init = function (bs) {
         exports.plugins[name].init(bs, eventManager);
     }
 };
-},{"./events":6,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.location":14,"./ghostmode.scroll":15}],14:[function(require,module,exports){
+},{"./events":7,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.location":14,"./ghostmode.scroll":15}],14:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1522,4 +1521,4 @@ exports.emit = function (name, data) {
 exports.on = function (name, func) {
     exports.socket.on(name, func);
 };
-},{}]},{},[7])
+},{}]},{},[1]);
