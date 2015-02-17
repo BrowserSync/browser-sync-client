@@ -3,9 +3,10 @@ var karma      = require('gulp-karma');
 var jshint     = require('gulp-jshint');
 var uglify     = require('gulp-uglify');
 var contribs   = require('gulp-contribs');
-var browserify = require('gulp-browserify');
 var through2   = require('through2');
 var rename     = require('gulp-rename');
+var browserify = require("browserify");
+var source      = require("vinyl-source-stream");
 
 var testFiles = [
     'test/todo.js'
@@ -53,8 +54,10 @@ gulp.task('contribs', function () {
  * @returns {*}
  */
 var stripDebug = function () {
+    var chunks = [];
     return through2.obj(function (file, enc, cb) {
-        var string = file.contents.toString();
+        chunks.push(file);
+        var string = file._contents.toString();
         var regex  = /\/\*\*debug:start\*\*\/[\s\S]*\/\*\*debug:end\*\*\//g;
         var stripped = string.replace(regex, "");
         file.contents = new Buffer(stripped);
@@ -65,10 +68,16 @@ var stripDebug = function () {
 
 // Basic usage
 gulp.task('build-dist', function() {
+
     // Single entry point to browserify
-    gulp.src('lib/index.js')
-        .pipe(browserify())
-        .pipe(gulp.dest('./dist'))
+    return browserify({entries: ["./lib/index.js"]})
+        .bundle()
+        .pipe(source("index.js"))
+        .pipe(gulp.dest('./dist'));
+});
+
+gulp.task("dist", ["build-dist"], function () {
+    return gulp.src(["dist/index.js"])
         .pipe(stripDebug())
         .pipe(uglify())
         .pipe(rename("index.min.js"))
@@ -83,7 +92,9 @@ gulp.task('build-dev', function() {
 });
 
 gulp.task("dev", ['build-dist'], function () {
-    gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ['build-dist']);
+    gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ['dist']);
 });
 
 gulp.task('default', ["lint-lib", "lint-test", "build-dist", "test"]);
+
+gulp.task("build", ["dist"]);

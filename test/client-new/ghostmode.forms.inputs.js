@@ -1,4 +1,4 @@
-describe("The scroll Plugin", function () {
+describe.only("The scroll Plugin", function () {
 
     var forms   = window.__bs_inputs__;
     var bs      = __bs_stub__;
