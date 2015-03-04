@@ -362,6 +362,9 @@ var current = function () {
  * @param {BrowserSync} bs
  */
 exports.init = function (bs) {
+    if (bs.options.tagNames) {
+        options.tagNames = bs.options.tagNames;
+    }
     exports.saveScroll(utils.getWindow(), utils.getDocument());
     bs.socket.on("file:reload", exports.reload(bs));
     bs.socket.on("browser:reload", function () {
