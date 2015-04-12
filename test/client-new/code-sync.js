@@ -30,8 +30,11 @@ describe("Code Sync", function() {
         var reloadStub;
         before(function () {
             dataStub = {
-                assetFileName: "style.css",
-                fileExtension: "css"
+                path: 'css/styles/styles.css',
+                basename: 'styles.css',
+                ext: "css",
+                type: 'inject',
+                log: true
             };
             reloadStub = sinon.stub(codeSync, "reloadBrowser").returns(true);
         });
