@@ -30,10 +30,10 @@ describe("Code Sync", function() {
         var reloadStub;
         before(function () {
             dataStub = {
-                path: 'css/styles/styles.css',
-                basename: 'styles.css',
+                path: "css/styles/styles.css",
+                basename: "styles.css",
                 ext: "css",
-                type: 'inject',
+                type: "inject",
                 log: true
             };
             reloadStub = sinon.stub(codeSync, "reloadBrowser").returns(true);

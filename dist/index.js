@@ -511,8 +511,6 @@ sync.getAttr = function (tagName) {
  */
 sync.getMatches = function (elems, url, attr) {
 
-    console.log("HERE");
-    console.log(elems, url, attr);
     if (url[0] === "*") {
         return elems;
     }
