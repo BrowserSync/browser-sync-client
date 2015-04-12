@@ -30,8 +30,11 @@ describe("Code Sync", function() {
         var reloadStub;
         before(function () {
             dataStub = {
-                assetFileName: "style.css",
-                fileExtension: "css"
+                path: 'css/styles/styles.css',
+                basename: 'styles.css',
+                ext: "css",
+                type: 'inject',
+                log: true
             };
             reloadStub = sinon.stub(codeSync, "reloadBrowser").returns(true);
         });
@@ -118,6 +121,10 @@ describe("Code Sync", function() {
             }
         ];
 
+        it("can return multiple elements", function () {
+            var matches  = codeSync.getMatches(stubs, "*", "href");
+            assert.equal(matches.length, 3);
+        });
         it("can return element matches: 1", function() {
             var matches  = codeSync.getMatches(stubs, "style.css", "href");
             var actual   = matches[0];
@@ -165,12 +172,6 @@ describe("Code Sync", function() {
         });
         it("should handle filenames with regexes", function () {
             var input    = "http://localhost:8080/style.css?rel=123343";
-            var expected = "http://localhost:8080/style.css";
-            var actual   = codeSync.getFilenameOnly(input);
-            assert.equal(actual[0], expected);
-        });
-        it.skip("should handle filenames with regexes with multiple ?", function () {
-            var input    = "http://localhost.com/??/style.css";
             var expected = "http://localhost:8080/style.css";
             var actual   = codeSync.getFilenameOnly(input);
             assert.equal(actual[0], expected);

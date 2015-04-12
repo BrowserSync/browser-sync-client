@@ -28,43 +28,32 @@ describe("The location Plugin", function () {
     });
     describe("socketEvent():", function () {
 
-        var urlStub, func, canSyncStub, pathStub;
+        var urlStub, func, pathStub;
         before(function () {
             urlStub = sinon.stub(location, "setUrl");
             pathStub = sinon.stub(location, "setPath");
             func = location.socketEvent(bs);
-            canSyncStub= sinon.stub(bs, "canSync");
         });
         afterEach(function () {
             urlStub.reset();
-            canSyncStub.reset();
             pathStub.reset();
         });
         after(function () {
             urlStub.restore();
-            canSyncStub.restore();
             pathStub.restore();
         });
         it("should return a function", function () {
             assert.equal(typeof location.socketEvent() === "function", true);
         });
         it("should set url if cansync = true", function () {
-            canSyncStub.returns(true);
             func({url: "/index.html"});
             sinon.assert.called(urlStub);
         });
-        it("should not set url if cansync = false", function () {
-            canSyncStub.returns(false);
-            func({url: "/index.html"});
-            sinon.assert.notCalled(urlStub);
-        });
         it("should set url if `canSync` = false, but `override` = true", function () {
-            canSyncStub.returns(false);
             func({url: "/index.html", override: true});
             sinon.assert.calledOnce(urlStub);
         });
         it("should set path if data.path is set", function () {
-            canSyncStub.returns(true);
             func({path: "/form.html", override: true});
             sinon.assert.calledWithExactly(pathStub, "/form.html");
         });
