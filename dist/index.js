@@ -332,6 +332,7 @@ if (!("indexOf" in Array.prototype)) {
 "use strict";
 var events = require("./events");
 var utils  = require("./browser.utils").utils;
+var sync   = exports;
 
 var options = {
 
@@ -361,15 +362,15 @@ var current = function () {
 /**
  * @param {BrowserSync} bs
  */
-exports.init = function (bs) {
+sync.init = function (bs) {
     if (bs.options.tagNames) {
         options.tagNames = bs.options.tagNames;
     }
-    exports.saveScroll(utils.getWindow(), utils.getDocument());
-    bs.socket.on("file:reload", exports.reload(bs));
+    sync.saveScroll(utils.getWindow(), utils.getDocument());
+    bs.socket.on("file:reload", sync.reload(bs));
     bs.socket.on("browser:reload", function () {
         if (bs.canSync({url: current()}, OPT_PATH)) {
-            exports.reloadBrowser(true);
+            sync.reloadBrowser(true);
         }
     });
 };
@@ -379,7 +380,7 @@ exports.init = function (bs) {
  * @param $window
  * @param $document
  */
-exports.saveScroll = function ($window, $document) {
+sync.saveScroll = function ($window, $document) {
 
     if (!utils.isOldIe()) {
         return;
@@ -404,13 +405,13 @@ exports.saveScroll = function ($window, $document) {
  * @param options
  * @returns {{elem: HTMLElement, timeStamp: number}}
  */
-exports.swapFile = function (elem, attr, options) {
+sync.swapFile = function (elem, attr, options) {
 
     var currentValue = elem[attr];
     var timeStamp = new Date().getTime();
     var suffix = "?rel=" + timeStamp;
 
-    var justUrl = exports.getFilenameOnly(currentValue);
+    var justUrl = sync.getFilenameOnly(currentValue);
 
     if (justUrl) {
         currentValue = justUrl[0];
@@ -442,7 +443,7 @@ exports.swapFile = function (elem, attr, options) {
     };
 };
 
-exports.getFilenameOnly = function (url) {
+sync.getFilenameOnly = function (url) {
     return /^[^\?]+(?=\?)/.exec(url);
 };
 
@@ -450,7 +451,7 @@ exports.getFilenameOnly = function (url) {
  * @param {BrowserSync} bs
  * @returns {*}
  */
-exports.reload = function (bs) {
+sync.reload = function (bs) {
 
     /**
      * @param data - from socket
@@ -465,20 +466,20 @@ exports.reload = function (bs) {
         var emitter = bs.emitter;
 
         if (data.url || !options.injectChanges) {
-            exports.reloadBrowser(true);
+            sync.reloadBrowser(true);
         }
 
         if (data.assetFileName && data.fileExtension) {
 
-            var domData = exports.getElems(data.fileExtension);
-            var elems   = exports.getMatches(domData.elems, data.assetFileName, domData.attr);
+            var domData = sync.getElems(data.fileExtension);
+            var elems   = sync.getMatches(domData.elems, data.assetFileName, domData.attr);
 
             if (elems.length && options.notify) {
                 emitter.emit("notify", {message: "Injected: " + data.assetFileName});
             }
 
             for (var i = 0, n = elems.length; i < n; i += 1) {
-                transformedElem = exports.swapFile(elems[i], domData.attr, options);
+                transformedElem = sync.swapFile(elems[i], domData.attr, options);
             }
         }
 
@@ -490,7 +491,7 @@ exports.reload = function (bs) {
  * @param fileExtension
  * @returns {*}
  */
-exports.getTagName = function (fileExtension) {
+sync.getTagName = function (fileExtension) {
     return options.tagNames[fileExtension];
 };
 
@@ -498,7 +499,7 @@ exports.getTagName = function (fileExtension) {
  * @param tagName
  * @returns {*}
  */
-exports.getAttr = function (tagName) {
+sync.getAttr = function (tagName) {
     return options.attrs[tagName];
 };
 
@@ -508,7 +509,11 @@ exports.getAttr = function (tagName) {
  * @param attr
  * @returns {Array}
  */
-exports.getMatches = function (elems, url, attr) {
+sync.getMatches = function (elems, url, attr) {
+
+    if (url === "*") {
+        return elems;
+    }
 
     var matches = [];
 
@@ -525,10 +530,10 @@ exports.getMatches = function (elems, url, attr) {
  * @param fileExtension
  * @returns {{elems: NodeList, attr: *}}
  */
-exports.getElems = function(fileExtension) {
+sync.getElems = function(fileExtension) {
 
-    var tagName = exports.getTagName(fileExtension);
-    var attr    = exports.getAttr(tagName);
+    var tagName = sync.getTagName(fileExtension);
+    var attr    = sync.getAttr(tagName);
 
     return {
         elems: document.getElementsByTagName(tagName),
@@ -539,15 +544,15 @@ exports.getElems = function(fileExtension) {
 /**
  * @returns {window}
  */
-exports.getWindow = function () {
+sync.getWindow = function () {
     return window;
 };
 
 /**
  * @param confirm
  */
-exports.reloadBrowser = function (confirm) {
-    var $window = exports.getWindow();
+sync.reloadBrowser = function (confirm) {
+    var $window = sync.getWindow();
     if (confirm) {
         $window.location.reload(true);
     }
