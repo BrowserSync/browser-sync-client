@@ -32,8 +32,9 @@ exports.init = function (options) {
         ghostMode.init(browserSync);
         codeSync.init(browserSync);
 
+        notify.init(browserSync);
+
         if (options.notify) {
-            notify.init(browserSync);
             notify.flash("Connected to BrowserSync");
         }
     }
