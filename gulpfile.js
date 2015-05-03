@@ -76,6 +76,10 @@ gulp.task('build-dist', function() {
         .pipe(gulp.dest('./dist'));
 });
 
+gulp.task("watch-dist", ['dist'], function () {
+    require("http").get('http://localhost:3000/__browser_sync__?method=reload').on('error', console.error.bind(console));
+});
+
 gulp.task("dist", ["build-dist"], function () {
     return gulp.src(["dist/index.js"])
         .pipe(stripDebug())
@@ -92,7 +96,7 @@ gulp.task('build-dev', function() {
 });
 
 gulp.task("dev", ['build-dist'], function () {
-    gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ['dist']);
+    gulp.watch(["lib/**/*.js", "test/client-new/**/*.js"], ['watch-dist']);
 });
 
 gulp.task('default', ["lint-lib", "lint-test", "build-dist"]);

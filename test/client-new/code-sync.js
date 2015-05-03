@@ -2,10 +2,14 @@ describe("Code Sync", function() {
     var codeSync;
     var bs;
     var socketSpy;
+    var codeSyncUtils;
+    var abstractions;
 
     before(function () {
         bs        = window.__bs_stub__;
         codeSync  = window.__bs_code_sync__;
+        codeSyncUtils = window.__bs_codeSyncUtils__;
+        abstractions  = window.__bs_abstractions__;
         socketSpy = sinon.spy(bs.socket, "on");
     });
     after(function () {
@@ -58,25 +62,25 @@ describe("Code Sync", function() {
     });
     describe("reloading the browser", function(){
         var spy;
-        var stub;
-        beforeEach(function () {
+        var $window;
+        before(function () {
             spy = sinon.spy();
-            stub = sinon.stub(codeSync, "getWindow").returns({
+            $window = {
                 location: {
                     reload: spy
                 }
-            });
+            };
+        });
+        afterEach(function () {
+            spy.reset();
         });
         it("can reload the browser", function () {
-            codeSync.reloadBrowser(true);
-            sinon.assert.called(stub);
+            codeSync.reloadBrowser($window, true);
             sinon.assert.called(spy);
-            stub.restore();
         });
         it("can reload the browser", function () {
-            codeSync.reloadBrowser(false);
+            codeSync.reloadBrowser($window, false);
             sinon.assert.notCalled(spy);
-            stub.restore();
         });
     });
     it("getTagName(): 1", function () {
@@ -98,10 +102,6 @@ describe("Code Sync", function() {
         var actual   = codeSync.getAttr("img");
         var expected = "src";
         assert.equal(actual, expected);
-    });
-    it("can retrieve the window object", function () {
-        var actual = codeSync.getWindow();
-        assert.equal(typeof actual, "object");
     });
 
     describe("matching elements", function () {
@@ -170,10 +170,11 @@ describe("Code Sync", function() {
             assert.equal(actual.attr, "href");
             elemStub.restore();
         });
+
         it("should handle filenames with regexes", function () {
             var input    = "http://localhost:8080/style.css?rel=123343";
             var expected = "http://localhost:8080/style.css";
-            var actual   = codeSync.getFilenameOnly(input);
+            var actual   = codeSyncUtils.getFilenameOnly(input);
             assert.equal(actual[0], expected);
         });
     });

@@ -13,6 +13,7 @@ var utils        = require("./browser.utils").utils;
 
 var shouldReload = false;
 
+
 /**
  * @param options
  */
@@ -31,7 +32,6 @@ exports.init = function (options) {
         // Always init on page load
         ghostMode.init(browserSync);
         codeSync.init(browserSync);
-
         notify.init(browserSync);
 
         if (options.notify) {
@@ -51,24 +51,26 @@ socket.on("disconnect", function () {
 
 /**debug:start**/
 if (window.__karma__) {
-    window.__bs_scroll__     = require("./ghostmode.scroll");
-    window.__bs_clicks__     = require("./ghostmode.clicks");
-    window.__bs_location__   = require("./ghostmode.location");
-    window.__bs_inputs__     = require("./ghostmode.forms.input");
-    window.__bs_toggles__    = require("./ghostmode.forms.toggles");
-    window.__bs_submit__     = require("./ghostmode.forms.submit");
-    window.__bs_forms__      = require("./ghostmode.forms");
-    window.__bs_utils__      = require("./browser.utils");
-    window.__bs_emitter__    = emitter;
-    window.__bs              = BrowserSync;
-    window.__bs_notify__     = notify;
-    window.__bs_code_sync__  = codeSync;
-    window.__bs_ghost_mode__ = ghostMode;
-    window.__bs_socket__     = socket;
-    window.__bs_index__      = exports;
+    window.__bs_scroll__        = require("./ghostmode.scroll");
+    window.__bs_clicks__        = require("./ghostmode.clicks");
+    window.__bs_location__      = require("./ghostmode.location");
+    window.__bs_inputs__        = require("./ghostmode.forms.input");
+    window.__bs_toggles__       = require("./ghostmode.forms.toggles");
+    window.__bs_submit__        = require("./ghostmode.forms.submit");
+    window.__bs_forms__         = require("./ghostmode.forms");
+    window.__bs_utils__         = require("./browser.utils");
+    window.__bs_codeSyncUtils__ = require("./code-sync/utils");
+    window.__bs_abstractions__  = require("./browser.abstractions");
+    window.__bs_emitter__       = emitter;
+    window.__bs                 = BrowserSync;
+    window.__bs_notify__        = notify;
+    window.__bs_code_sync__     = codeSync;
+    window.__bs_ghost_mode__    = ghostMode;
+    window.__bs_socket__        = socket;
+    window.__bs_index__         = exports;
 }
 /**debug:end**/
-},{"./browser-sync":2,"./browser.utils":3,"./client-shims":4,"./code-sync":5,"./emitter":6,"./events":7,"./ghostmode":13,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12,"./ghostmode.location":14,"./ghostmode.scroll":15,"./notify":16,"./socket":17}],2:[function(require,module,exports){
+},{"./browser-sync":2,"./browser.abstractions":3,"./browser.utils":4,"./client-shims":5,"./code-sync":6,"./code-sync/utils":8,"./emitter":9,"./events":10,"./ghostmode":16,"./ghostmode.clicks":11,"./ghostmode.forms":13,"./ghostmode.forms.input":12,"./ghostmode.forms.submit":14,"./ghostmode.forms.toggles":15,"./ghostmode.location":17,"./ghostmode.scroll":18,"./notify":19,"./socket":20}],2:[function(require,module,exports){
 "use strict";
 
 var socket       = require("./socket");
@@ -175,7 +177,15 @@ function getByPath(obj, path) {
 
     return obj;
 }
-},{"./browser.utils":3,"./emitter":6,"./notify":16,"./socket":17}],3:[function(require,module,exports){
+},{"./browser.utils":4,"./emitter":9,"./notify":19,"./socket":20}],3:[function(require,module,exports){
+module.exports.$document = function () {
+    return document;
+};
+
+module.exports.$window   = function () {
+    return window;
+};
+},{}],4:[function(require,module,exports){
 "use strict";
 
 /**
@@ -308,7 +318,7 @@ exports.utils = {
         return typeof window.attachEvent !== "undefined";
     }
 };
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
 
     Array.prototype.indexOf= function(find, i) {
@@ -329,11 +339,15 @@ if (!("indexOf" in Array.prototype)) {
         return -1;
     };
 }
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
-var events = require("./events");
-var utils  = require("./browser.utils").utils;
-var sync   = exports;
+var events       = require("./events");
+var utils        = require("./code-sync/utils");
+var cssImports   = require("./code-sync/css.imports");
+var browserUtils = require("./browser.utils").utils;
+var $document    = require("./browser.abstractions").$document();
+var $window      = require("./browser.abstractions").$window;
+var sync         = exports;
 
 var options = {
 
@@ -367,11 +381,12 @@ sync.init = function (bs) {
     if (bs.options.tagNames) {
         options.tagNames = bs.options.tagNames;
     }
-    sync.saveScroll(utils.getWindow(), utils.getDocument());
-    bs.socket.on("file:reload", sync.reload(bs));
+    var reloadfn = sync.reload(bs);
+    sync.saveScroll($window, $document);
+    bs.socket.on("file:reload", reloadfn);
     bs.socket.on("browser:reload", function () {
         if (bs.canSync({url: current()}, OPT_PATH)) {
-            sync.reloadBrowser(true);
+            sync.reloadBrowser($window(), true);
         }
     });
 };
@@ -383,21 +398,21 @@ sync.init = function (bs) {
  */
 sync.saveScroll = function ($window, $document) {
 
-    if (!utils.isOldIe()) {
+    if (!browserUtils.isOldIe()) {
         return;
     }
 
     if ($document.readyState === "complete") {
-        utils.restoreScrollPosition();
+        browserUtils.restoreScrollPosition();
     } else {
         events.manager.addEvent($document, "readystatechange", function() {
             if ($document.readyState === "complete") {
-                utils.restoreScrollPosition();
+                browserUtils.restoreScrollPosition();
             }
         });
     }
 
-    events.manager.addEvent(window, "beforeunload", utils.saveScrollPosition);
+    events.manager.addEvent(window, "beforeunload", browserUtils.saveScrollPosition);
 };
 
 /**
@@ -411,8 +426,9 @@ sync.swapFile = function (elem, attr, options) {
     var currentValue = elem[attr];
     var timeStamp = new Date().getTime();
     var suffix = "?rel=" + timeStamp;
+    var body = $document.body;
 
-    var justUrl = sync.getFilenameOnly(currentValue);
+    var justUrl = utils.getFilenameOnly(currentValue);
 
     if (justUrl) {
         currentValue = justUrl[0];
@@ -426,11 +442,9 @@ sync.swapFile = function (elem, attr, options) {
 
     elem[attr] = currentValue + suffix;
 
-    var body = document.body;
-
     setTimeout(function () {
         if (!hiddenElem) {
-            hiddenElem = document.createElement("DIV");
+            hiddenElem = $document.createElement("DIV");
             body.appendChild(hiddenElem);
         } else {
             hiddenElem.style.display = "none";
@@ -442,10 +456,6 @@ sync.swapFile = function (elem, attr, options) {
         elem: elem,
         timeStamp: timeStamp
     };
-};
-
-sync.getFilenameOnly = function (url) {
-    return /^[^\?]+(?=\?)/.exec(url);
 };
 
 /**
@@ -467,7 +477,7 @@ sync.reload = function (bs) {
         var emitter = bs.emitter;
 
         if (data.url || !options.injectChanges) {
-            sync.reloadBrowser(true);
+            sync.reloadBrowser($window, true);
         }
 
         if (data.basename && data.ext) {
@@ -477,10 +487,17 @@ sync.reload = function (bs) {
 
             if (elems.length && options.notify) {
                 emitter.emit("notify", {message: "Injected: " + data.basename});
+                for (var i = 0, n = elems.length; i < n; i += 1) {
+                    transformedElem = sync.swapFile(elems[i], domData.attr, options);
+                }
             }
 
-            for (var i = 0, n = elems.length; i < n; i += 1) {
-                transformedElem = sync.swapFile(elems[i], domData.attr, options);
+            if (data.ext === "css") {
+                var matches = cssImports.getMatches(data);
+                if (matches.length && options.notify) {
+                    emitter.emit("notify", {message: "Injected @import: " + data.basename});
+                    matches.forEach(cssImports.reattach);
+                }
             }
         }
 
@@ -537,28 +554,153 @@ sync.getElems = function(fileExtension) {
     var attr    = sync.getAttr(tagName);
 
     return {
-        elems: document.getElementsByTagName(tagName),
+        elems: $document.getElementsByTagName(tagName),
         attr: attr
     };
 };
 
 /**
- * @returns {window}
- */
-sync.getWindow = function () {
-    return window;
-};
-
-/**
  * @param confirm
  */
-sync.reloadBrowser = function (confirm) {
-    var $window = sync.getWindow();
+sync.reloadBrowser = function ($window, confirm) {
     if (confirm) {
         $window.location.reload(true);
     }
 };
-},{"./browser.utils":3,"./events":7}],6:[function(require,module,exports){
+},{"./browser.abstractions":3,"./browser.utils":4,"./code-sync/css.imports":7,"./code-sync/utils":8,"./events":10}],7:[function(require,module,exports){
+var $document = require("../browser.abstractions").$document();
+var utils     = require("./utils");
+
+cssimports = exports;
+
+/**
+ * Find any imports that match the basename of
+ * the requested file
+ * @param basename
+ * @returns {Array}
+ */
+cssimports.getMatches = function (data) {
+    var imported = [];
+    var ref = $document.getElementsByTagName('style');
+    var style;
+    var match = [];
+
+    for (var i = 0, len = ref.length; i < len; i++) {
+        style = ref[i];
+        if (style.sheet) {
+            cssimports.collect(style, style.sheet, imported);
+        }
+    }
+
+    if (imported.length) {
+
+        if (data.basename[0] === "*") {
+            return imported;
+        }
+
+        return imported.filter(function (item) {
+            return item.href.indexOf(data.basename) > -1;
+        });
+    }
+
+    return match;
+};
+
+/**
+ * @param link
+ * @param styleSheet
+ * @param result
+ */
+cssimports.collect = function (link, styleSheet, result) {
+    var rule, rules, i;
+    try {
+        rules = styleSheet != null ? styleSheet.cssRules : void 0;
+    } catch (error) {
+        /* noop */
+    }
+    if (rules && rules.length) {
+        for (var index = i = 0, len = rules.length; i < len; index = ++i) {
+            rule = rules[index];
+            switch (rule.type) {
+                case CSSRule.CHARSET_RULE:
+                    continue;
+                case CSSRule.IMPORT_RULE:
+                    result.push({
+                        link: link,
+                        rule: rule,
+                        index: index,
+                        href: rule.href
+                    });
+                    cssimports.collect(link, rule.styleSheet, result);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+};
+
+/**
+ * @param item
+ */
+cssimports.reattach = function(item) {
+
+    var rule    = item.rule;
+    var index   = item.index;
+    var link    = item.link;
+    var parent  = rule.parentStyleSheet;
+    var href    = utils.generateCacheBustUrl(rule.href);
+    var media   = rule.media.length ? [].join.call(rule.media, ', ') : '';
+    var newRule = "@import url(\"" + href + "\") " + media + ";";
+
+    rule.__BrowserSync_newHref = href;
+
+    var tempLink  = document.createElement("link");
+    tempLink.rel  = 'stylesheet';
+    tempLink.href = href;
+    tempLink.__BrowserSync_pendingRemoval = true;
+
+    if (link.parentNode) {
+        link.parentNode.insertBefore(tempLink, link);
+    }
+
+    setTimeout(function () {
+        if (tempLink.parentNode) {
+            tempLink.parentNode.removeChild(tempLink);
+        }
+
+        if (rule.__BrowserSync_newHref !== href) {
+            return;
+        }
+
+        parent.insertRule(newRule, index);
+        parent.deleteRule(index + 1);
+        rule = parent.cssRules[index];
+        rule.__BrowserSync_newHref = href;
+
+        return setTimeout(function() {
+            if (rule.__BrowserSync_newHref !== href) {
+                return;
+            }
+            parent.insertRule(newRule, index);
+            return parent.deleteRule(index + 1);
+
+        }, 200);
+
+    }, 200);
+};
+},{"../browser.abstractions":3,"./utils":8}],8:[function(require,module,exports){
+var utils = exports;
+
+utils.getFilenameOnly = function (url) {
+    return /^[^\?]+(?=\?)?/.exec(url);
+};
+
+utils.generateCacheBustUrl = function (href) {
+    return utils.getFilenameOnly(href) + "?rel=" + new Date().getTime();
+};
+
+},{}],9:[function(require,module,exports){
 "use strict";
 
 exports.events = {};
@@ -592,7 +734,7 @@ exports.on = function (name, func) {
         events[name].listeners.push(func);
     }
 };
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 exports._ElementCache = function () {
 
     var cache = {},
@@ -873,7 +1015,7 @@ exports.manager = eventManager;
 
 
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -940,7 +1082,7 @@ exports.socketEvent = function (bs, eventManager) {
         }
     };
 };
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1009,7 +1151,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],10:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 exports.plugins = {
@@ -1045,7 +1187,7 @@ exports.init = function (bs, eventManager) {
         }
     }
 };
-},{"./ghostmode.forms.input":9,"./ghostmode.forms.submit":11,"./ghostmode.forms.toggles":12}],11:[function(require,module,exports){
+},{"./ghostmode.forms.input":12,"./ghostmode.forms.submit":14,"./ghostmode.forms.toggles":15}],14:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1111,7 +1253,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1207,7 +1349,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 var eventManager = require("./events").manager;
@@ -1228,7 +1370,7 @@ exports.init = function (bs) {
         exports.plugins[name].init(bs, eventManager);
     }
 };
-},{"./events":7,"./ghostmode.clicks":8,"./ghostmode.forms":10,"./ghostmode.location":14,"./ghostmode.scroll":15}],14:[function(require,module,exports){
+},{"./events":10,"./ghostmode.clicks":11,"./ghostmode.forms":13,"./ghostmode.location":17,"./ghostmode.scroll":18}],17:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1278,7 +1420,7 @@ exports.setUrl = function (url) {
 exports.setPath = function (path) {
     window.location = window.location.protocol + "//" + window.location.host + path;
 };
-},{}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1380,7 +1522,7 @@ exports.getScrollTopPercentage = function (pos) {
     var percentage  = exports.getScrollPercentage(scrollSpace, pos);
     return percentage.y;
 };
-},{}],16:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 var scroll = require("./ghostmode.scroll");
@@ -1489,7 +1631,7 @@ exports.flash = function (message, timeout) {
 
     return elem;
 };
-},{"./ghostmode.scroll":15}],17:[function(require,module,exports){
+},{"./ghostmode.scroll":18}],20:[function(require,module,exports){
 "use strict";
 
 /**
