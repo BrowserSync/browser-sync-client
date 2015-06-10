@@ -1,28 +1,52 @@
 "use strict";
 
-var fs   = require("fs");
-var path = require("path");
+var etag  = require("etag")
+var fresh = require("fresh")
+var fs    = require("fs");
+var path  = require("path");
 
-var script = path.resolve(__dirname + "/dist/index.min.js");
+var minifiedScript = path.resolve(__dirname + "/dist/index.min.js");
+var unminifiedScript = path.resolve(__dirname + "/dist/index.js");
+
+function headers(res, body){
+    res.setHeader("Cache-Control", "public, max-age=0");
+    res.setHeader("Content-Type", "text/javascript");
+    res.setHeader("ETag", etag(body));
+};
+
+function body(options, connector) {
+  var script = minifiedScript;
+  if (options && !options.minify) {
+      script = unminifiedScript;
+  }
+
+  return connector + fs.readFileSync(script);
+}
+
+function isConditionalGet(req) {
+    return req.headers["if-none-match"] || req.headers["if-modified-since"];
+}
+
+function notModified(res) {
+    res.removeHeader("Content-Type");
+    res.statusCode = 304;
+    res.end();
+}
 
 function init(options, connector, type) {
-    
-    var result;
-
-    if (options && options.minify) {
-        result = fs.readFileSync(script);
-    } else {
-        script = path.resolve(__dirname + "/dist/index.js");
-        result = fs.readFileSync(script);
-    }
-
+    var requestBody = body(options, connector);
     if (type && type === "file") {
-        return connector + result;
+        return requestBody;
     }
 
     return function (req, res) {
-        res.setHeader("Content-Type", "text/javascript");
-        res.end(connector + result);
+        headers(res, requestBody);
+
+        if (isConditionalGet(req) && fresh(req.headers, res._headers)) {
+            return notModified(res);
+        }
+
+        res.end(requestBody);
     };
 }
 

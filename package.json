@@ -51,5 +51,8 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "keywords": [],
-  "dependencies": {}
+  "dependencies": {
+    "etag": "^1.7.0",
+    "fresh": "^0.3.0"
+  }
 }
