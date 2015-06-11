@@ -12,6 +12,7 @@ var events       = require("./events");
 var utils        = require("./browser.utils").utils;
 
 var shouldReload = false;
+var initialised    = false;
 
 /**
  * @param options
@@ -22,6 +23,7 @@ exports.init = function (options) {
     }
 
     var BS = window.___browserSync___ || {};
+
     if (!BS.client) {
 
         BS.client = true;
@@ -38,16 +40,22 @@ exports.init = function (options) {
             notify.flash("Connected to BrowserSync");
         }
     }
+
+    if (!initialised) {
+        socket.on("disconnect", function () {
+            if (options.notify) {
+                notify.flash("Disconnected from BrowserSync");
+            }
+            shouldReload = true;
+        });
+        initialised = true;
+    }
 };
 
 /**
  * Handle individual socket connections
  */
 socket.on("connection", exports.init);
-socket.on("disconnect", function () {
-    notify.flash("Disconnected from BrowserSync");
-    shouldReload = true;
-});
 
 /**debug:start**/
 if (window.__karma__) {
