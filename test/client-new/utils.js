@@ -7,7 +7,7 @@ describe("Generic Browser utils", function(){
         var act, windowStub, documentStub, stub;
         before(function () {
             act = function () {
-                return browserUtils.utils.getBrowserScrollPosition();
+                return browserUtils.getBrowserScrollPosition();
             };
             windowStub   = sinon.stub(browserUtils, "getWindow").returns({});
             documentStub = sinon.stub(browserUtils, "getDocument");
@@ -64,7 +64,7 @@ describe("Generic Browser utils", function(){
         var documentStub;
         before(function () {
             act = function () {
-                return browserUtils.utils.getScrollSpace();
+                return browserUtils.getScrollSpace();
             };
             documentStub = sinon.stub(browserUtils, "getDocument").returns({
                 documentElement: {
@@ -103,16 +103,16 @@ describe("Generic Browser utils", function(){
             stub.restore();
         });
         it("should call getElementsByTagName() with the tagname", function(){
-            browserUtils.utils.getSingleElement("link", 0);
+            browserUtils.getSingleElement("link", 0);
             sinon.assert.calledWithExactly(stub, "link");
         });
         it("should return the correct index: 1", function(){
-            var actual   = browserUtils.utils.getSingleElement("link", 0);
+            var actual   = browserUtils.getSingleElement("link", 0);
             var expected = "item1";
             assert.equal(actual.id, expected);
         });
         it("should return the correct index: 2", function(){
-            var actual   = browserUtils.utils.getSingleElement("link", 1);
+            var actual   = browserUtils.getSingleElement("link", 1);
             var expected = "item2";
             assert.equal(actual.id, expected);
             stub.restore();
@@ -122,7 +122,7 @@ describe("Generic Browser utils", function(){
         it("should return the correct index", function () {
             var elem     = {id: "abx"};
             var stub     = sinon.stub(document, "getElementsByTagName").returns([elem, {id: "xab"}]);
-            var actual   = browserUtils.utils.getElementIndex("link", elem);
+            var actual   = browserUtils.getElementIndex("link", elem);
             var expected = 0;
             assert.equal(actual, expected);
             stub.restore();
@@ -130,7 +130,7 @@ describe("Generic Browser utils", function(){
         it("should return the correct index", function () {
             var elem     = {id: "xab"};
             var stub     = sinon.stub(document, "getElementsByTagName").returns([{id: "abx"}, elem]);
-            var actual   = browserUtils.utils.getElementIndex("link", elem);
+            var actual   = browserUtils.getElementIndex("link", elem);
             var expected = 1;
             assert.equal(actual, expected);
             stub.restore();
@@ -140,7 +140,7 @@ describe("Generic Browser utils", function(){
     describe("Getting element data for socket event", function(){
         var indexStub;
         before(function () {
-            indexStub = sinon.stub(browserUtils.utils, "getElementIndex").returns(0);
+            indexStub = sinon.stub(browserUtils, "getElementIndex").returns(0);
         });
         after(function () {
             indexStub.restore();
@@ -149,7 +149,7 @@ describe("Generic Browser utils", function(){
             var elem = {
                 tagName: "link"
             };
-            var actual   = browserUtils.utils.getElementData(elem);
+            var actual   = browserUtils.getElementData(elem);
             assert.equal(actual.tagName, "link");
             assert.equal(actual.index, 0);
         });
@@ -163,7 +163,7 @@ describe("Generic Browser utils", function(){
             focus: focus
         };
 
-        var actual = window.__bs_utils__.utils.forceChange(elem);
+        var actual = window.__bs_utils__.forceChange(elem);
         sinon.assert.calledOnce(blur);
         sinon.assert.calledOnce(focus);
     });
@@ -171,6 +171,6 @@ describe("Generic Browser utils", function(){
         window.__bs_utils__.getDocument();
     });
     describe("getDocument(): ", function () {
-        window.__bs_utils__.utils.getBody();
+        window.__bs_utils__.getBody();
     });
 });

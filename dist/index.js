@@ -9,7 +9,7 @@ var BrowserSync  = require("./browser-sync");
 var ghostMode    = require("./ghostmode");
 var emitter      = require("./emitter");
 var events       = require("./events");
-var utils        = require("./browser.utils").utils;
+var utils        = require("./browser.utils");
 
 var shouldReload = false;
 var initialised    = false;
@@ -92,7 +92,7 @@ var BrowserSync = function (options) {
     this.options = options;
     this.socket  = socket;
     this.emitter = emitter;
-    this.utils   = utils.utils;
+    this.utils   = utils;
 
     var _this = this;
 
@@ -186,10 +186,12 @@ function getByPath(obj, path) {
 },{"./browser.utils":3,"./emitter":6,"./notify":16,"./socket":17}],3:[function(require,module,exports){
 "use strict";
 
+var utils = exports;
+
 /**
  * @returns {window}
  */
-exports.getWindow = function () {
+utils.getWindow = function () {
     return window;
 };
 
@@ -197,124 +199,134 @@ exports.getWindow = function () {
  *
  * @returns {HTMLDocument}
  */
-exports.getDocument = function () {
+utils.getDocument = function () {
     return document;
 };
 
 /**
- * @type {{getScrollPosition: getScrollPosition, getScrollSpace: getScrollSpace}}
+ * Get the current x/y position crossbow
+ * @returns {{x: *, y: *}}
  */
-exports.utils = {
-    /**
-     * Cross-browser scroll position
-     * @returns {{x: number, y: number}}
-     */
-    getBrowserScrollPosition: function () {
+utils.getBrowserScrollPosition = function () {
 
-        var $window   = exports.getWindow();
-        var $document = exports.getDocument();
-        var scrollX;
-        var scrollY;
-        var dElement = $document.documentElement;
-        var dBody    = $document.body;
+    var $window = exports.getWindow();
+    var $document = exports.getDocument();
+    var scrollX;
+    var scrollY;
+    var dElement = $document.documentElement;
+    var dBody = $document.body;
 
-        if ($window.pageYOffset !== undefined) {
-            scrollX = $window.pageXOffset;
-            scrollY = $window.pageYOffset;
-        } else {
-            scrollX = dElement.scrollLeft || dBody.scrollLeft || 0;
-            scrollY = dElement.scrollTop || dBody.scrollTop || 0;
-        }
-
-        return {
-            x: scrollX,
-            y: scrollY
-        };
-    },
-    /**
-     * @returns {{x: number, y: number}}
-     */
-    getScrollSpace: function () {
-        var $document = exports.getDocument();
-        var dElement = $document.documentElement;
-        var dBody    = $document.body;
-        return {
-            x: dBody.scrollHeight - dElement.clientWidth,
-            y: dBody.scrollHeight - dElement.clientHeight
-        };
-    },
-    /**
-     * Saves scroll position into cookies
-     */
-    saveScrollPosition: function () {
-        var pos = exports.utils.getBrowserScrollPosition();
-        pos = [pos.x, pos.y];
-        document.cookie = "bs_scroll_pos=" + pos.join(",");
-    },
-    /**
-     * Restores scroll position from cookies
-     */
-    restoreScrollPosition: function () {
-        var pos = document.cookie.replace(/(?:(?:^|.*;\s*)bs_scroll_pos\s*\=\s*([^;]*).*$)|^.*$/, "$1").split(",");
-        window.scrollTo(pos[0], pos[1]);
-    },
-    /**
-     * @param tagName
-     * @param elem
-     * @returns {*|number}
-     */
-    getElementIndex: function (tagName, elem) {
-        var allElems = document.getElementsByTagName(tagName);
-        return Array.prototype.indexOf.call(allElems, elem);
-    },
-    /**
-     * Force Change event on radio & checkboxes (IE)
-     */
-    forceChange: function (elem) {
-        elem.blur();
-        elem.focus();
-    },
-    /**
-     * @param elem
-     * @returns {{tagName: (elem.tagName|*), index: *}}
-     */
-    getElementData: function (elem) {
-        var tagName = elem.tagName;
-        var index   = exports.utils.getElementIndex(tagName, elem);
-        return {
-            tagName: tagName,
-            index: index
-        };
-    },
-    /**
-     * @param {string} tagName
-     * @param {number} index
-     */
-    getSingleElement: function (tagName, index) {
-        var elems = document.getElementsByTagName(tagName);
-        return elems[index];
-    },
-    /**
-     *
-     */
-    getBody: function () {
-        return document.getElementsByTagName("body")[0];
-    },
-    /**
-     *
-     */
-    reloadBrowser: function () {
-        exports.getWindow().location.reload(true);
-    },
-    getWindow:   exports.getWindow,
-    getDocument: exports.getDocument,
-    /**
-     * Are we dealing with old IE?
-     * @returns {boolean}
-     */
-    isOldIe: function () {
-        return typeof window.attachEvent !== "undefined";
+    if ($window.pageYOffset !== undefined) {
+        scrollX = $window.pageXOffset;
+        scrollY = $window.pageYOffset;
+    } else {
+        scrollX = dElement.scrollLeft || dBody.scrollLeft || 0;
+        scrollY = dElement.scrollTop || dBody.scrollTop || 0;
     }
+
+    return {
+        x: scrollX,
+        y: scrollY
+    };
+};
+
+/**
+ * @returns {{x: number, y: number}}
+ */
+utils.getScrollSpace = function () {
+    var $document = exports.getDocument();
+    var dElement = $document.documentElement;
+    var dBody = $document.body;
+    return {
+        x: dBody.scrollHeight - dElement.clientWidth,
+        y: dBody.scrollHeight - dElement.clientHeight
+    };
+};
+
+/**
+ * Saves scroll position into cookies
+ */
+utils.saveScrollPosition = function () {
+    var pos = utils.getBrowserScrollPosition();
+    pos = [pos.x, pos.y];
+    utils.getDocument.cookie = "bs_scroll_pos=" + pos.join(",");
+};
+
+/**
+ * Restores scroll position from cookies
+ */
+utils.restoreScrollPosition = function () {
+    var pos = utils.getDocument().cookie.replace(/(?:(?:^|.*;\s*)bs_scroll_pos\s*\=\s*([^;]*).*$)|^.*$/, "$1").split(",");
+    utils.getWindow().scrollTo(pos[0], pos[1]);
+};
+
+/**
+ * @param tagName
+ * @param elem
+ * @returns {*|number}
+ */
+utils.getElementIndex = function (tagName, elem) {
+    var allElems = utils.getDocument().getElementsByTagName(tagName);
+    return Array.prototype.indexOf.call(allElems, elem);
+};
+
+/**
+ * Force Change event on radio & checkboxes (IE)
+ */
+utils.forceChange = function (elem) {
+    elem.blur();
+    elem.focus();
+};
+
+/**
+ * @param elem
+ * @returns {{tagName: (elem.tagName|*), index: *}}
+ */
+utils.getElementData = function (elem) {
+    var tagName = elem.tagName;
+    var index = utils.getElementIndex(tagName, elem);
+    return {
+        tagName: tagName,
+        index:   index
+    };
+};
+
+/**
+ * @param {string} tagName
+ * @param {number} index
+ */
+utils.getSingleElement = function (tagName, index) {
+    var elems = utils.getDocument().getElementsByTagName(tagName);
+    return elems[index];
+};
+
+/**
+ * Get the body element
+ */
+utils.getBody = function () {
+    return utils.getDocument().getElementsByTagName("body")[0];
+};
+
+/**
+ * @param {{x: number, y: number}} pos
+ */
+utils.setScroll = function (pos) {
+    utils.getWindow().scrollTo(pos.x, pos.y);
+};
+
+/**
+ * Hard reload
+ */
+utils.reloadBrowser = function () {
+    utils.getWindow().location.reload();
+};
+
+/**
+ * Are we dealing with old IE?
+ * @returns {boolean}
+ */
+utils.isOldIe = function () {
+    return typeof utils.getWindow().attachEvent !== "undefined";
 };
 },{}],4:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
@@ -339,9 +351,10 @@ if (!("indexOf" in Array.prototype)) {
 }
 },{}],5:[function(require,module,exports){
 "use strict";
-var events = require("./events");
-var utils  = require("./browser.utils").utils;
-var sync   = exports;
+var events  = require("./events");
+var utils   = require("./browser.utils");
+var emitter = require("./emitter");
+var sync    = exports;
 
 var options = {
 
@@ -372,16 +385,67 @@ var current = function () {
  * @param {BrowserSync} bs
  */
 sync.init = function (bs) {
+
     if (bs.options.tagNames) {
         options.tagNames = bs.options.tagNames;
     }
-    sync.saveScroll(utils.getWindow(), utils.getDocument());
+
+    if (bs.options.scrollRestoreTechnique === "window.name") {
+        sync.saveScrollInName(bs);
+    } else {
+        sync.saveScrollInCookie(utils.getWindow(), utils.getDocument());
+    }
+
     bs.socket.on("file:reload", sync.reload(bs));
     bs.socket.on("browser:reload", function () {
         if (bs.canSync({url: current()}, OPT_PATH)) {
-            sync.reloadBrowser(true);
+            sync.reloadBrowser(true, bs);
         }
     });
+};
+
+/**
+ * Use window.name to store/restore scroll position
+ */
+sync.saveScrollInName = function () {
+
+    var $window = utils.getWindow();
+    var saved   = {};
+
+    /**
+     * Register the save event for whenever we call
+     * a hard reload
+     */
+    emitter.on("browser:hardReload", function () {
+        $window.name = $window.name + "bs=" + JSON.stringify({
+            bs: {
+                hardReload: true,
+                scroll:     utils.getBrowserScrollPosition()
+            }
+        });
+    });
+
+    /**
+     * window.name is always a string, even when never set.
+     */
+    try {
+        var json = $window.name.match(/bs=(.+)$/);
+        if (json) {
+            saved = JSON.parse(json[1]);
+        }
+    } catch (e) {
+        saved = {};
+    }
+
+    /**
+     * if the JSON was parsed correctly, try to
+     * find a scroll property and restore it.
+     */
+    if (saved.bs && saved.bs.hardReload && saved.bs.scroll) {
+        utils.setScroll(saved.bs.scroll);
+    }
+
+    $window.name = "";
 };
 
 /**
@@ -389,7 +453,7 @@ sync.init = function (bs) {
  * @param $window
  * @param $document
  */
-sync.saveScroll = function ($window, $document) {
+sync.saveScrollInCookie = function ($window, $document) {
 
     if (!utils.isOldIe()) {
         return;
@@ -405,7 +469,7 @@ sync.saveScroll = function ($window, $document) {
         });
     }
 
-    events.manager.addEvent(window, "beforeunload", utils.saveScrollPosition);
+    emitter.on("browser:hardReload", utils.saveScrollPosition);
 };
 
 /**
@@ -551,22 +615,15 @@ sync.getElems = function(fileExtension) {
 };
 
 /**
- * @returns {window}
- */
-sync.getWindow = function () {
-    return window;
-};
-
-/**
  * @param confirm
  */
 sync.reloadBrowser = function (confirm) {
-    var $window = sync.getWindow();
+    emitter.emit("browser:hardReload");
     if (confirm) {
-        $window.location.reload(true);
+        utils.reloadBrowser();
     }
 };
-},{"./browser.utils":3,"./events":7}],6:[function(require,module,exports){
+},{"./browser.utils":3,"./emitter":6,"./events":7}],6:[function(require,module,exports){
 "use strict";
 
 exports.events = {};
