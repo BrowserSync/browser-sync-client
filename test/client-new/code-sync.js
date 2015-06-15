@@ -6,6 +6,7 @@ describe("Code Sync", function() {
     before(function () {
         bs        = window.__bs_stub__;
         codeSync  = window.__bs_code_sync__;
+        utils  = window.__bs_utils__;
         socketSpy = sinon.spy(bs.socket, "on");
     });
     after(function () {
@@ -61,7 +62,7 @@ describe("Code Sync", function() {
         var stub;
         beforeEach(function () {
             spy = sinon.spy();
-            stub = sinon.stub(codeSync, "getWindow").returns({
+            stub = sinon.stub(utils, "getWindow").returns({
                 location: {
                     reload: spy
                 }
@@ -98,10 +99,6 @@ describe("Code Sync", function() {
         var actual   = codeSync.getAttr("img");
         var expected = "src";
         assert.equal(actual, expected);
-    });
-    it("can retrieve the window object", function () {
-        var actual = codeSync.getWindow();
-        assert.equal(typeof actual, "object");
     });
 
     describe("matching elements", function () {
