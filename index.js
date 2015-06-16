@@ -1,26 +1,28 @@
 "use strict";
 
-var etag  = require("etag")
-var fresh = require("fresh")
+var etag  = require("etag");
+var fresh = require("fresh");
 var fs    = require("fs");
 var path  = require("path");
 
-var minifiedScript = path.resolve(__dirname + "/dist/index.min.js");
-var unminifiedScript = path.resolve(__dirname + "/dist/index.js");
+var minifiedScript   = path.join(__dirname, "/dist/index.min.js");
+var unminifiedScript = path.join(__dirname, "/dist/index.js");
 
-function headers(res, body){
+function setHeaders(res, body) {
     res.setHeader("Cache-Control", "public, max-age=0");
     res.setHeader("Content-Type", "text/javascript");
     res.setHeader("ETag", etag(body));
-};
+}
 
-function body(options, connector) {
-  var script = minifiedScript;
-  if (options && !options.minify) {
-      script = unminifiedScript;
-  }
+function getScriptBody(options, connector) {
 
-  return connector + fs.readFileSync(script);
+    var script = minifiedScript;
+
+    if (options && !options.minify) {
+        script = unminifiedScript;
+    }
+
+    return connector + fs.readFileSync(script);
 }
 
 function isConditionalGet(req) {
@@ -34,13 +36,15 @@ function notModified(res) {
 }
 
 function init(options, connector, type) {
-    var requestBody = body(options, connector);
+
+    var requestBody = getScriptBody(options, connector);
+
     if (type && type === "file") {
         return requestBody;
     }
 
     return function (req, res) {
-        headers(res, requestBody);
+        setHeaders(res, requestBody);
 
         if (isConditionalGet(req) && fresh(req.headers, res._headers)) {
             return notModified(res);
