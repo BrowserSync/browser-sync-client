@@ -25,7 +25,9 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "gulp && mocha test/middleware && karma start test/karma.conf.ci.js"
+    "test": "gulp && npm run mocha && npm run karma",
+    "mocha": "mocha test/middleware",
+    "karma": "karma start test/karma.conf.ci.js"
   },
   "devDependencies": {
     "browser-sync": "^2.7.10",

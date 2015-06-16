@@ -67,4 +67,27 @@ describe("Using the middleware", function () {
                 done();
             });
     });
+
+    it("should return a gzipped response when supported", function (done) {
+        request(app)
+            .get("/client")
+            .set("Accept-Encoding", "gzip, deflate")
+            .expect("Content-Encoding", "gzip")
+            .expect(200)
+            .end(function (err, res) {
+                assert.isTrue(res.text.indexOf("BEFORE") > -1);
+                done();
+            });
+    });
+
+    it("Should return a non-gzipped response when not supported", function (done) {
+        request(app)
+            .get("/client")
+            .set("Accept-Encoding", "deflate")
+            .expect(200)
+            .end(function (err, res) {
+                assert.isTrue(res.text.indexOf("BEFORE") > -1);
+                done();
+            });
+    });
 });
