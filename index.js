@@ -8,7 +8,6 @@ var zlib  = require("zlib");
 
 var minifiedScript   = path.join(__dirname, "/dist/index.min.js");
 var unminifiedScript = path.join(__dirname, "/dist/index.js");
-var gzipCached;
 
 /**
  * Does the current request support compressed encoding?
@@ -75,6 +74,8 @@ function notModified(res) {
  * @returns {*}
  */
 function init(options, connector, type) {
+
+    var gzipCached;
 
     /**
      * Combine string to create the final version
