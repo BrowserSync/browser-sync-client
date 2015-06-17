@@ -22,7 +22,6 @@ function supportsGzip (req) {
 
 /**
  * Set headers on the response
- * @param {Object} req
  * @param {Object} res
  * @param {String} body
  */
@@ -102,18 +101,6 @@ function init(options, connector, type) {
         var output = requestBody;
 
         /**
-         * If gzip is supported, compress the string once
-         * and save for future requests
-         */
-        if (supportsGzip(req)) {
-            if (!gzipCached) {
-                gzipCached = zlib.gzipSync(output);
-            }
-            output = gzipCached;
-            res.setHeader("Content-Encoding", "gzip");
-        }
-
-        /**
          * Set the appropriate headers for caching
          */
         setHeaders(res, output);
@@ -122,7 +109,27 @@ function init(options, connector, type) {
             return notModified(res);
         }
 
-        res.end(output);
+        /**
+         * If gzip is supported, compress the string once
+         * and save for future requests
+         */
+        if (supportsGzip(req)) {
+
+            res.setHeader("Content-Encoding", "gzip");
+
+            if (!gzipCached) {
+                var buf = new Buffer(output, "utf-8");
+                zlib.gzip(buf, function (_, result) {
+                    gzipCached = result;
+                    res.end(result);
+                });
+            } else {
+                res.end(gzipCached);
+            }
+
+        } else {
+            res.end(output);
+        }
     };
 }
 
