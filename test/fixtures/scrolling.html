@@ -6,12 +6,61 @@
     <meta name="viewport" content="width=device-width">
     <title>About us</title>
     <link rel="stylesheet" href="assets/style.css"/>
+    <style>
+        .test {
+            max-height: 100px;
+            background: grey;
+            overflow: scroll;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
     <h1>Style-injector Ghost Mode: Scrolling</h1>
     <a href="index.html">Homepage</a>
     <button onclick="scroll()">Scroll</button>
+
+    <div class="test">
+        <p>1</p>
+
+        <p>2</p>
+
+        <p>3</p>
+
+        <p>4</p>
+
+        <p>5</p>
+
+        <p>6</p>
+
+        <p>7</p>
+
+        <p>8</p>
+
+        <p>9</p>
+
+        <p>10</p>
+
+        <p>11</p>
+
+        <p>12</p>
+
+        <p>13</p>
+
+        <p>14</p>
+
+        <p>15</p>
+
+        <p>16</p>
+
+        <p>17</p>
+
+        <p>18</p>
+
+        <p>19</p>
+
+        <p>20</p>
+    </div>
 
     <h1>1</h1>
 
@@ -212,26 +261,5 @@
     <h1>100</h1>
 </div>
 
-<!-- Paste Snippet from command-line here -->
-<script src="helpers.js"></script>
-
-<script type="text/javascript">
-
-    function scroll() {
-
-        YUI().use('node-event-simulate', function(Y) {
-
-            var node = Y.one(window);
-            node.simulateGesture("move", {
-                path: {
-                    xdist: 0,
-                    ydist: 100
-                } ,
-                duration: 100
-            });
-        });
-    }
-
-</script>
 </body>
 </html>

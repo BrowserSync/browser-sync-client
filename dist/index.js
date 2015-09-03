@@ -322,6 +322,17 @@ utils.reloadBrowser = function () {
 };
 
 /**
+ * Foreach polyfill
+ * @param coll
+ * @param fn
+ */
+utils.forEach = function (coll, fn) {
+    for (var i = 0, n = coll.length; i < n; i += 1) {
+        fn(coll[i], i, coll);
+    }
+};
+
+/**
  * Are we dealing with old IE?
  * @returns {boolean}
  */
@@ -1350,8 +1361,9 @@ exports.setPath = function (path) {
  * This is the plugin for syncing scroll between devices
  * @type {string}
  */
-var EVENT_NAME = "scroll";
-var OPT_PATH   = "ghostMode.scroll";
+var WINDOW_EVENT_NAME  = "scroll";
+var ELEMENT_EVENT_NAME = "scroll:element";
+var OPT_PATH           = "ghostMode.scroll";
 var utils;
 
 exports.canEmitEvents = true;
@@ -1361,9 +1373,38 @@ exports.canEmitEvents = true;
  * @param eventManager
  */
 exports.init = function (bs, eventManager) {
-    utils = bs.utils;
-    eventManager.addEvent(window, EVENT_NAME, exports.browserEvent(bs));
-    bs.socket.on(EVENT_NAME, exports.socketEvent(bs));
+    utils     = bs.utils;
+    var opts  = bs.options;
+
+    /**
+     * Window Scroll events
+     */
+    eventManager.addEvent(window, WINDOW_EVENT_NAME, exports.browserEvent(bs));
+    bs.socket.on(WINDOW_EVENT_NAME, exports.socketEvent(bs));
+
+    /**
+     * element Scroll Events
+     */
+    var cache = {};
+    addElementScrollEvents("scrollElements", false);
+    addElementScrollEvents("scrollElementMapping", true);
+    bs.socket.on(ELEMENT_EVENT_NAME, exports.socketEventForElement(bs, cache));
+
+    function addElementScrollEvents (key, map) {
+        if (!opts[key] || !opts[key].length || !("querySelectorAll" in document)) {
+            return;
+        }
+        utils.forEach(opts[key], function (selector) {
+            var elems = document.querySelectorAll(selector) || [];
+            utils.forEach(elems, function (elem) {
+                var data = utils.getElementData(elem);
+                data.cacheSelector = data.tagName + ":" + data.index;
+                data.map = map;
+                cache[data.cacheSelector] = elem;
+                eventManager.addEvent(elem, WINDOW_EVENT_NAME, exports.browserEventForElement(bs, elem, data));
+            });
+        });
+    }
 };
 
 /**
@@ -1392,6 +1433,48 @@ exports.socketEvent = function (bs) {
 /**
  * @param bs
  */
+exports.socketEventForElement = function (bs, cache) {
+    return function (data) {
+
+        if (!bs.canSync(data, OPT_PATH)) {
+            return false;
+        }
+
+        exports.canEmitEvents = false;
+
+        function scrollOne (selector, pos) {
+            if (cache[selector]) {
+                cache[selector].scrollTop = pos;
+            }
+        }
+
+        if (data.map) {
+            return Object.keys(cache).forEach(function (key) {
+                scrollOne(key, data.position);
+            });
+        }
+
+        scrollOne(data.elem.cacheSelector, data.position);
+    };
+};
+
+/**
+ * @param bs
+ */
+exports.browserEventForElement = function (bs, elem, data) {
+    return function () {
+        var canSync = exports.canEmitEvents;
+        if (canSync) {
+            bs.socket.emit(ELEMENT_EVENT_NAME, {
+                position: elem.scrollTop,
+                elem: data,
+                map: data.map
+            });
+        }
+        exports.canEmitEvents = true;
+    };
+};
+
 exports.browserEvent = function (bs) {
 
     return function () {
@@ -1399,7 +1482,7 @@ exports.browserEvent = function (bs) {
         var canSync = exports.canEmitEvents;
 
         if (canSync) {
-            bs.socket.emit(EVENT_NAME, {
+            bs.socket.emit(WINDOW_EVENT_NAME, {
                 position: exports.getScrollPosition()
             });
         }
