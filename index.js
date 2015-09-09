@@ -136,3 +136,9 @@ function init(options, connector, type) {
 
 module.exports.middleware = init;
 module.exports.plugin = init;
+module.exports.minified = function () {
+    return fs.readFileSync(minifiedScript, 'utf8');
+};
+module.exports.unminified = function () {
+    return fs.readFileSync(unminifiedScript, 'utf8');
+}
