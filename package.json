@@ -21,6 +21,9 @@
     }
   ],
   "main": "index.js",
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">= 0.8.0"
   },
