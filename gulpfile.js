@@ -72,6 +72,9 @@ gulp.task('build-dist', function() {
     // Single entry point to browserify
     return browserify({entries: ["./lib/index.js"]})
         .bundle()
+        .on('error', function (e) {
+            console.log(e);
+        })
         .pipe(source("index.js"))
         .pipe(gulp.dest('./dist'));
 });
