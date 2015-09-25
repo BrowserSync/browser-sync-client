@@ -9,7 +9,7 @@ bs.init({
     server: {
         baseDir: ["test/fixtures"]
     },
-    open: false,
+    open: false
     //minify: false
     //snippetOptions: {
     //    rule: {

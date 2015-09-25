@@ -70,10 +70,11 @@ var stripDebug = function () {
 gulp.task('build-dist', function() {
 
     // Single entry point to browserify
-    return browserify({entries: ["./lib/index.js"]})
+    return browserify('./lib/index.js')
         .bundle()
         .on('error', function (e) {
             console.log(e);
+            this.emit('end');
         })
         .pipe(source("index.js"))
         .pipe(gulp.dest('./dist'));
