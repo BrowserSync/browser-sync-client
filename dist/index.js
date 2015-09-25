@@ -7,7 +7,7 @@ var notify  = require("./notify");
 var utils   = require("./browser.utils");
 var merge   = require("lodash.merge");
 var objGet  = require("lodash.get");
-var store  = require("./store");
+var storage = require("./store");
 
 /**
  * @constructor
@@ -18,30 +18,24 @@ var BrowserSync = function (options) {
     this.socket  = socket;
     this.emitter = emitter;
     this.utils   = utils;
+    this.store   = storage.create(options.id);
+    var _this    = this;
 
-    var _this = this;
-    var _store = store.create(options.id);
 
-    //console.log('current store', _store.get());
+    if (!this.store.get('client')) {
+        this.store.set('client', {
+            id: this.socket.socket.id
+        });
+    }
 
-    _store.set('user', {
-        name: 'shane',
-        pet: 'kittie'
-    });
+    var currentId = this.store.get('client.id');
 
-    _store.set('user.name', 'Alfred');
-
-    console.log(_store.get('user.name'));
-
-    //console.log();
-    //console.log('after set', _store.get());
-
-    /**
-     * Options set
-     */
-    socket.on("options:set", function (data) {
-        emitter.emit("notify", "Setting options...");
-        merge(_this.options, data.options);
+    socket.emit('Client.register', this.store.get('client'));
+    socket.on('Options.set', function (data) {
+        if (data.id === currentId) {
+            console.log('received', data.options);
+            merge(_this.options, data.options);
+        }
     });
 };
 
@@ -1461,7 +1455,7 @@ exports.init = function (options) {
         notify.init(browserSync);
 
         if (options.notify) {
-            notify.flash("Connected to BrowserSync");
+            notify.flash("Connected to BrowserSync as " + browserSync.store.get('client.id'));
         }
     }
 
@@ -1651,12 +1645,12 @@ exports.on = function (name, func) {
     exports.socket.on(name, func);
 };
 },{}],18:[function(require,module,exports){
-var utils   = require('./browser.utils');
-var $window = utils.getWindow();
-var merge   = require("lodash.merge");
+var utils    = require('./browser.utils');
+var $window  = utils.getWindow();
+var merge    = require("lodash.merge");
 var objGet   = require("lodash.get");
 var objSet   = require("lodash.set");
-var PREFIX  = 'bs=';
+var PREFIX   = 'bs=';
 
 function getFromName () {
     try {
@@ -1679,8 +1673,7 @@ function wipeName () {
     $window.name = '';
 }
 
-
-function create (id) {
+function createFromId (id) {
 
     function get (path) {
 
@@ -1708,14 +1701,16 @@ function create (id) {
 
         if (prev[id]) {
             var newValues = mergeValues ? merge({}, objGet(prev[id], path), value) : value;
-            var newObj = objSet(prev[id], path, newValues);
+            objSet(prev[id], path, newValues);
             saveInName(prev);
+            return prev;
         } else {
 
             wipeName();
             var newSession = {};
             newSession[id] = objSet({}, path, value);
             saveInName(newSession);
+            return newSession;
         }
     }
 
@@ -1724,6 +1719,10 @@ function create (id) {
         set: set,
         merge: merge
     }
+}
+
+function create (id) {
+    return createFromId(id);
 }
 
 module.exports.create = create;
