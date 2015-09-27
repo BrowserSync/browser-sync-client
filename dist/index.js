@@ -18,9 +18,8 @@ var BrowserSync = function (options) {
     this.socket  = socket;
     this.emitter = emitter;
     this.utils   = utils;
-    this.store   = storage.create(options.id);
+    this.store   = storage.create(options.sessionId);
     var _this    = this;
-
 
     if (!this.store.get('client')) {
         this.store.set('client', {
