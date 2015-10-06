@@ -6,6 +6,8 @@ client["plugin:name"] = "client:script";
 bs.use(client);
 
 bs.init({
+    //proxy: 'hype-fortype.static',
+    files: ['test/fixtures'],
     server: {
         baseDir: ["test/fixtures"]
     },

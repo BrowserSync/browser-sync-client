@@ -82,6 +82,7 @@ if (window.__karma__) {
 var socket       = require("./socket");
 var emitter      = require("./emitter");
 var notify       = require("./notify");
+var tab          = require("./tab");
 var utils        = require("./browser.utils");
 
 /**
@@ -89,19 +90,27 @@ var utils        = require("./browser.utils");
  */
 var BrowserSync = function (options) {
 
-    this.options = options;
-    this.socket  = socket;
-    this.emitter = emitter;
-    this.utils   = utils;
+    this.options   = options;
+    this.socket    = socket;
+    this.emitter   = emitter;
+    this.utils     = utils;
+    this.tabHidden = false;
 
-    var _this = this;
+    var bs = this;
 
     /**
      * Options set
      */
     socket.on("options:set", function (data) {
         emitter.emit("notify", "Setting options...");
-        _this.options = data.options;
+        bs.options = data.options;
+    });
+
+    emitter.on("tab:hidden", function () {
+        bs.tabHidden = true;
+    });
+    emitter.on("tab:visible", function () {
+        bs.tabHidden = false;
     });
 };
 
@@ -183,7 +192,7 @@ function getByPath(obj, path) {
 
     return obj;
 }
-},{"./browser.utils":3,"./emitter":6,"./notify":16,"./socket":17}],3:[function(require,module,exports){
+},{"./browser.utils":3,"./emitter":6,"./notify":16,"./socket":17,"./tab":18}],3:[function(require,module,exports){
 "use strict";
 
 var utils = exports;
@@ -546,7 +555,7 @@ sync.reload = function (bs) {
             return;
         }
         var transformedElem;
-        var options    = bs.options;
+        var options = bs.options;
         var emitter = bs.emitter;
 
         if (data.url || !options.injectChanges) {
@@ -1004,7 +1013,7 @@ exports.socketEvent = function (bs, eventManager) {
 
     return function (data) {
 
-        if (!bs.canSync(data, OPT_PATH)) {
+        if (!bs.canSync(data, OPT_PATH) || bs.tabHidden) {
             return false;
         }
 
@@ -1678,4 +1687,41 @@ exports.emit = function (name, data) {
 exports.on = function (name, func) {
     exports.socket.on(name, func);
 };
-},{}]},{},[1]);
+},{}],18:[function(require,module,exports){
+var utils        = require("./browser.utils");
+var emitter      = require("./emitter");
+var $document    = utils.getDocument();
+
+// Set the name of the hidden property and the change event for visibility
+var hidden, visibilityChange;
+if (typeof $document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
+    hidden = "hidden";
+    visibilityChange = "visibilitychange";
+} else if (typeof $document.mozHidden !== "undefined") {
+    hidden = "mozHidden";
+    visibilityChange = "mozvisibilitychange";
+} else if (typeof $document.msHidden !== "undefined") {
+    hidden = "msHidden";
+    visibilityChange = "msvisibilitychange";
+} else if (typeof $document.webkitHidden !== "undefined") {
+    hidden = "webkitHidden";
+    visibilityChange = "webkitvisibilitychange";
+}
+
+// If the page is hidden, pause the video;
+// if the page is shown, play the video
+function handleVisibilityChange() {
+    if ($document[hidden]) {
+        emitter.emit("tab:hidden");
+    } else {
+        emitter.emit("tab:visible");
+    }
+}
+
+if (typeof $document.addEventListener === "undefined" ||
+    typeof $document[hidden] === "undefined") {
+    //console.log('not supported');
+} else {
+    $document.addEventListener(visibilityChange, handleVisibilityChange, false);
+}
+},{"./browser.utils":3,"./emitter":6}]},{},[1]);
