@@ -174,4 +174,56 @@ describe("Code Sync", function() {
             assert.equal(actual[0], expected);
         });
     });
+    describe("Saving scroll position", function () {
+    	it("should save scroll position in window.name", function () {
+            sinon.stub(window.__bs_utils__, 'getWindow').returns({
+                name: ''
+            });
+            var $window = window.__bs_utils__.getWindow();
+    		codeSync.saveScrollInName();
+            window.__bs_emitter__.emit('browser:hardReload', {
+                scrollPosition: {
+                    x: 0,
+                    y: 0
+                }
+            });
+            assert.equal($window.name, '<<BS_START>>{"bs":{"hardReload":true,"scroll":{"x":0,"y":0}}}<<BS_END>>');
+            window.__bs_utils__.getWindow.restore();
+    	});
+        it.only("should save scroll position in window.name", function () {
+            sinon.stub(window.__bs_utils__, 'getWindow').returns({
+                name: 'NG_SOME_VALUE'
+            });
+            var $window = window.__bs_utils__.getWindow();
+            codeSync.saveScrollInName();
+            window.__bs_emitter__.emit('browser:hardReload', {
+                scrollPosition: {
+                    x: 0,
+                    y: 0
+                }
+            });
+            assert.equal($window.name, 'NG_SOME_VALUE<<BS_START>>{"bs":{"hardReload":true,"scroll":{"x":0,"y":0}}}<<BS_END>>');
+            window.__bs_utils__.getWindow.restore();
+        });
+        it("should save scroll position in window.name", function () {
+            sinon.stub(window.__bs_utils__, 'getWindow').returns({
+                name: 'NG_SOME_VALUE',
+                scrollTo: function () {
+
+                }
+            });
+            var $window = window.__bs_utils__.getWindow();
+            codeSync.saveScrollInName();
+            window.__bs_emitter__.emit('browser:hardReload', {
+                scrollPosition: {
+                    x: 100,
+                    y: 0
+                }
+            });
+            assert.equal($window.name, 'NG_SOME_VALUE<<BS_START>>{"bs":{"hardReload":true,"scroll":{"x":100,"y":0}}}<<BS_END>>');
+            codeSync.saveScrollInName();
+            console.log($window.name);
+            window.__bs_utils__.getWindow.restore();
+        });
+    });
 });
