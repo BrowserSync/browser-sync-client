@@ -33,7 +33,7 @@ describe("The Notify Element", function() {
 
     it("can return a callback for watching", function(){
         var stub = sinon.stub(notify, "flash");
-        var cb   = notify.watchEvent();
+        var cb   = notify.watchEvent({options: {notify:true}});
         cb({message: "custom message"});
         sinon.assert.calledWithExactly(stub, "custom message", undefined);
         stub.restore();
@@ -59,7 +59,6 @@ describe("The Notify Element", function() {
     describe("Flashing", function () {
 
         var elemStub;
-        var scrollStub;
         var fakeElem;
         before(function () {
             fakeElem = {
@@ -70,14 +69,9 @@ describe("The Notify Element", function() {
                 }
             };
             elemStub   = sinon.stub(notify, "getElem");
-            scrollStub = sinon.stub(notify, "getScrollTop").returns(100);
-        });
-        afterEach(function () {
-            scrollStub.reset();
         });
         after(function () {
             elemStub.restore();
-            scrollStub.restore();
         });
         it("should return early if no ELEM", function () {
             elemStub.returns(false);
@@ -85,6 +79,11 @@ describe("The Notify Element", function() {
             assert.equal(actual, false);
         });
         it("should hide the notify elem ", function(){
+
+            sinon.stub(window.__bs_utils__, 'getBody').returns({
+                appendChild: function () {},
+                removeChild: function () {},
+            });
 
             elemStub.returns(fakeElem);
             var clock = sinon.useFakeTimers();
@@ -97,19 +96,7 @@ describe("The Notify Element", function() {
 
             assert.equal(actual, expected);
             clock.restore();
+            window.__bs_utils__.getBody.restore();
         });
-
-    });
-
-    // Utils
-    it("should retrieve elem from closure", function () {
-        var elem = notify.getElem();
-    });
-    it("should return 0 if no access to utils", function () {
-        var stub = sinon.stub(bs.utils, "getBrowserScrollPosition").returns({x:0, y:500});
-        var actual   = notify.getScrollTop();
-        var expected = 500;
-        assert.equal(actual, expected);
-        stub.restore();
     });
 });

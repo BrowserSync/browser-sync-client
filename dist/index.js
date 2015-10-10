@@ -127,11 +127,17 @@ utils.getWindow = function () {
 };
 
 /**
- *
  * @returns {HTMLDocument}
  */
 utils.getDocument = function () {
     return document;
+};
+
+/**
+ * @returns {HTMLElement}
+ */
+utils.getBody = function () {
+	return document.getElementsByTagName("body")[0];
 };
 
 /**
@@ -1554,6 +1560,7 @@ if (window.__karma__) {
 "use strict";
 
 var scroll = require("./ghostmode.scroll");
+var utils  = require("./browser.utils");
 
 var styles = [
     "display: none",
@@ -1569,10 +1576,8 @@ var styles = [
     "margin: 0",
     "color: white",
     "text-align: center"
-
 ];
 
-var browserSync;
 var elem;
 var options;
 var timeoutInt;
@@ -1583,8 +1588,7 @@ var timeoutInt;
  */
 exports.init = function (bs) {
 
-    browserSync = bs;
-    options = bs.options;
+    options     = bs.options;
 
     var cssStyles = styles;
 
@@ -1595,12 +1599,11 @@ exports.init = function (bs) {
     elem = document.createElement("DIV");
     elem.id = "__bs_notify__";
     elem.style.cssText = cssStyles.join(";");
-    document.getElementsByTagName("body")[0].appendChild(elem);
 
-    var flashFn = exports.watchEvent();
+    var flashFn = exports.watchEvent(bs);
 
-    browserSync.emitter.on("notify", flashFn);
-    browserSync.socket.on("browser:notify", flashFn);
+    bs.emitter.on("notify", flashFn);
+    bs.socket.on("browser:notify", flashFn);
 
     return elem;
 };
@@ -1608,12 +1611,14 @@ exports.init = function (bs) {
 /**
  * @returns {Function}
  */
-exports.watchEvent = function () {
+exports.watchEvent = function (bs) {
     return function (data) {
-        if (typeof data === "string") {
-            return exports.flash(data);
+        if (bs.options.notify) {
+            if (typeof data === "string") {
+                return exports.flash(data);
+            }
+            exports.flash(data.message, data.timeout);
         }
-        exports.flash(data.message, data.timeout);
     };
 };
 
@@ -1625,28 +1630,24 @@ exports.getElem = function () {
 };
 
 /**
- * @returns {number|*}
- */
-exports.getScrollTop = function () {
-    return browserSync.utils.getBrowserScrollPosition().y;
-};
-
-/**
  * @param message
  * @param [timeout]
  * @returns {*}
  */
 exports.flash = function (message, timeout) {
 
-    var elem = exports.getElem();
+    var elem  = exports.getElem();
+    var $body = utils.getBody();
 
     // return if notify was never initialised
     if (!elem) {
         return false;
     }
 
-    elem.innerHTML = message;
+    elem.innerHTML     = message;
     elem.style.display = "block";
+
+    $body.appendChild(elem);
 
     if (timeoutInt) {
         clearTimeout(timeoutInt);
@@ -1655,11 +1656,12 @@ exports.flash = function (message, timeout) {
 
     timeoutInt = window.setTimeout(function () {
         elem.style.display = "none";
+        $body.removeChild(elem);
     }, timeout || 2000);
 
     return elem;
 };
-},{"./ghostmode.scroll":14}],17:[function(require,module,exports){
+},{"./browser.utils":2,"./ghostmode.scroll":14}],17:[function(require,module,exports){
 "use strict";
 
 /**
