@@ -1656,7 +1656,9 @@ exports.flash = function (message, timeout) {
 
     timeoutInt = window.setTimeout(function () {
         elem.style.display = "none";
-        $body.removeChild(elem);
+        if (elem.parentNode) {
+            $body.removeChild(elem);
+        }
     }, timeout || 2000);
 
     return elem;
