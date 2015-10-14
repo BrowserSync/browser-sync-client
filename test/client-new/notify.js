@@ -80,7 +80,7 @@ describe("The Notify Element", function() {
         });
         it("should hide the notify elem ", function(){
 
-            sinon.stub(window.__bs_utils__, 'getBody').returns({
+            sinon.stub(window.__bs_utils__, "getBody").returns({
                 appendChild: function () {},
                 removeChild: function () {},
             });
