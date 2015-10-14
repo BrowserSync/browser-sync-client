@@ -5,9 +5,13 @@ Client-side script for BrowserSync
 ## Contributors
 
 ```
-    68	Shane Osbourne
+   177	Shane Osbourne
+     2	Sergey Slipchenko
      1	Hugo Dias
-     1	Sergey Slipchenko
+     1	Shinnosuke Watanabe
+     1	Tim Schaub
+     1	Shane Daniel
+     1	Matthieu Vachon
 ```
 
 ## License
