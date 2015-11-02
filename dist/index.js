@@ -212,12 +212,12 @@ module.exports={
                         { "name": "basename", "type": "string", "description": "Basename of file" },
                         { "name": "path",     "type": "string", "description": "Path from CWD" },
                         { "name": "ext",      "type": "string", "description": "File extension without the dot" },
-                        { "name": "item", "type": "object", "properties": [
+                        { "name": "item",     "type": "object", "properties": [
                                 { "name": "locator", "type": "object", "optional": true, "description": "Serialized Regex", "properties": [
-                                        { "name": "source", "type": "string", "description": "Regex Source" },
-                                        { "name": "global", "type": "boolean", "description": "`global` Regex Flag" },
+                                        { "name": "source",     "type": "string", "description":  "Regex Source" },
+                                        { "name": "global",     "type": "boolean", "description": "`global` Regex Flag" },
                                         { "name": "ignoreCase", "type": "boolean", "description": "`ignoreCase` Regex Flag" },
-                                        { "name": "multiline", "type": "boolean", "description": "`multiline` Regex Flag" }
+                                        { "name": "multiline",  "type": "boolean", "description": "`multiline` Regex Flag" }
                                     ]
                                 }
                             ]
@@ -261,6 +261,16 @@ module.exports={
                     { "name": "data", "type": "object", "optional": true, "description": "Any additional data to send on register" }
                 ],
                 "description": "register a client with an id"
+            },
+            {
+                "name": "heartbeat",
+                "parameters": [
+                    { "name": "client", "type": "object", "description": "Client information", "properties": [
+                        { "name": "id", "type": "string", "description": "Per tab, Per session heartbeat for a client" }
+                    ]},
+                    { "name": "data", "type": "object", "optional": true, "description": "Any additional data to send on register" }
+                ],
+                "description": "Send a heartbeat from a client"
             }
         ]
     }
@@ -307,6 +317,12 @@ var BrowserSync = function (options) {
             merge(_this.options, data.options);
         }
     });
+
+    var hb = protocol.validate('Client.heartbeat', this.store.get('client'));
+
+    setInterval(function () {
+        socket.emit(hb.payload.path, hb.payload.args);
+    }, 5000);
 };
 
 /**
