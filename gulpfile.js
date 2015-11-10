@@ -1,52 +1,30 @@
 var gulp       = require("gulp");
-//var karma      = require('gulp-karma');
-var jshint     = require('gulp-jshint');
-var uglify     = require('gulp-uglify');
-var contribs   = require('gulp-contribs');
-var through2   = require('through2');
-var rename     = require('gulp-rename');
+var jshint     = require("gulp-jshint");
+var uglify     = require("gulp-uglify");
+var contribs   = require("gulp-contribs");
+var through2   = require("through2");
+var rename     = require("gulp-rename");
 var browserify = require("browserify");
 var source     = require("vinyl-source-stream");
 
-var testFiles = [
-    'test/todo.js'
-];
-
-gulp.task('test', function() {
-    // Be sure to return the stream
-    return gulp.src(testFiles)
-        .pipe(karma({
-            configFile: 'test/karma.conf.ci.js',
-            action: 'run'
-        }));
-});
-
-gulp.task('test:watch', function() {
-    gulp.src(testFiles)
-        .pipe(karma({
-            configFile: 'test/karma.conf.js',
-            action: 'watch'
-        }));
-});
-
-gulp.task('lint-test', function () {
-    gulp.src(['test/client-new/*.js', 'test/middleware/*.js'])
-        .pipe(jshint('test/.jshintrc'))
+gulp.task("lint-test", function () {
+    return gulp.src(["test/client-new/*.js", "test/middleware/*.js", "gulpfile.js"])
+        .pipe(jshint("test/.jshintrc"))
         .pipe(jshint.reporter("default"))
-        .pipe(jshint.reporter("fail"))
+        .pipe(jshint.reporter("fail"));
 });
 
-gulp.task('lint-lib', function () {
-    return gulp.src(['lib/*', '!lib/browser-sync-client.js', '!lib/events.js'])
-        .pipe(jshint('lib/.jshintrc'))
+gulp.task("lint-lib", function () {
+    return gulp.src(["lib/*", "!lib/browser-sync-client.js", "!lib/events.js"])
+        .pipe(jshint("lib/.jshintrc"))
         .pipe(jshint.reporter("default"))
-        .pipe(jshint.reporter("fail"))
+        .pipe(jshint.reporter("fail"));
 });
 
-gulp.task('contribs', function () {
-    gulp.src('README.md')
+gulp.task("contribs", function () {
+    return gulp.src("README.md")
         .pipe(contribs())
-        .pipe(gulp.dest("./"))
+        .pipe(gulp.dest("./"));
 });
 
 /**
@@ -66,18 +44,11 @@ var stripDebug = function () {
     });
 };
 
-// Basic usage
-gulp.task('build-dist', function() {
-
-    // Single entry point to browserify
-    return browserify('./lib/index.js')
+gulp.task("build-dist", function() {
+    return browserify("./lib/index.js")
         .bundle()
-        .on('error', function (e) {
-            console.log(e);
-            this.emit('end');
-        })
         .pipe(source("index.js"))
-        .pipe(gulp.dest('./dist'));
+        .pipe(gulp.dest("./dist"));
 });
 
 gulp.task("dist", ["build-dist"], function () {
@@ -85,20 +56,13 @@ gulp.task("dist", ["build-dist"], function () {
         .pipe(stripDebug())
         .pipe(uglify())
         .pipe(rename("index.min.js"))
-        .pipe(gulp.dest('./dist'));
+        .pipe(gulp.dest("./dist"));
 });
 
-gulp.task('build-dev', function() {
-    // Single entry point to browserify
-    gulp.src('lib/index.js')
-        .pipe(browserify())
-        .pipe(gulp.dest('./dist'))
+gulp.task("dev", ["build-dist"], function () {
+    gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ["dist"]);
 });
 
-gulp.task("dev", ['build-dist'], function () {
-    gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ['dist']);
-});
-
-gulp.task('default', ["lint-lib", "lint-test", "build-dist"]);
+gulp.task("default", ["lint-lib", "lint-test", "build-dist"]);
 
 gulp.task("build", ["dist"]);

@@ -1,293 +1,13 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var p = exports;
-var proto = require('../protocol.json');
-
-p.validate = function (path) {
-    var args        = Array.from(arguments).slice(1);
-    path            = path.split('.');
-    var payloadArgs = {};
-    var domains     = proto.domains;
-    var domain      = getDomain(domains, path[0]);
-
-    if (domain.errors.length) {
-        return {
-            errors: domain.errors,
-            payload: {}
-        };
-    }
-
-    var command     = getCommand(domain.domain, path[1]);
-
-    if (command.errors.length) {
-        return {
-            errors: command.errors,
-            payload: {}
-        };
-    }
-
-    var validateErrors = verifyParameters(command.command.parameters, args);
-
-    if (!validateErrors.length) {
-        payloadArgs = command.command.parameters.reduce(function (all, param, i) {
-            all[param.name] = args[i];
-            return all;
-        }, {});
-    }
-
-    return {
-        errors: validateErrors,
-        payload: {
-            path: path.join('.'),
-            args: payloadArgs
-        }
-    };
-};
-
-/**
- * @param {Array} coll
- * @param {Array} args
- * @returns {Array}
- */
-function verifyParameters (coll, args) {
-    return coll.reduce(function (all, param, i) {
-        var current = args[i];
-        if (is('undefined', current) || !is(param.type, current)) {
-            return all.concat(verifyOne(current, param, ''));
-        }
-        return all.concat(verifySingleParameter(args[i], param));
-    }, []);
-}
-
-/**
- * @param {*} item
- * @param {Object} param
- * @param {string} [parent]
- * @returns {*}
- */
-function verifySingleParameter (item, param, parent) {
-    parent = parent ? [parent, param.name].join('.') : param.name;
-    if (param.type === 'object' && param.properties) {
-        return verifyProperties(item, param.properties, parent);
-    }
-    return verifyOne(item, param, parent);
-}
-
-/**
- * Verify a single property
- * @param {*} val
- * @param {Object} param
- * @param {String} parent
- * @returns {Array}
- */
-function verifyOne (val, param, parent) {
-    if (val === undefined) {
-        if (!param.optional) {
-            return [{
-                name: param.name,
-                errorType: 'missing',
-                path: parent,
-                expectedType: param.type
-            }];
-        }
-    } else if (!is(param.type, val)) {
-        return [{
-            name: param.name,
-            errorType: 'type',
-            path: parent,
-            expectedType: param.type
-        }]
-    }
-    return [];
-}
-
-/**
- * @param {*} item
- * @param {Object} props
- * @param {String} parentName
- * @returns {Array}
- */
-function verifyProperties (item, props, parentName) {
-    return props.reduce(function (all, prop) {
-        if (prop.type === 'object' && prop.properties && is('object', item) && item[prop.name]) {
-            return all.concat(verifyProperties(item[prop.name], prop.properties, [parentName, prop.name].join('.')));
-        }
-        return all.concat(verifyOne(item[prop.name], prop, [parentName, prop.name].join('.')));
-    }, []);
-}
-
-/**
- * @param {Array} domains
- * @param {Array} domainName
- * @returns {Array}
- */
-function getDomain (domains, domainName) {
-    var dom = domains.filter(function (x) {return x.domain === domainName});
-    var errors = [];
-    if (!dom.length) {
-        errors.push({
-            errorType: 'domain-missing',
-            name: domainName
-        });
-    }
-    return {
-        domain: dom[0],
-        errors: errors
-    }
-}
-
-/**
- * @param {Object} domain
- * @param {String} domainMethod
- * @returns {{domain: *, command: *}}
- */
-function getCommand (domain, domainMethod) {
-    var command = domain.commands.filter(function (x) {return x.name === domainMethod});
-    var errors = [];
-    if (!command.length) {
-        errors.push({
-            errorType: 'command-missing',
-            domain: domain.domain,
-            name: domainMethod
-        });
-    }
-    return {
-        command: command[0],
-        errors: errors
-    }
-}
-
-/**
- * More robust typechecking - taken from lodash
- * @type {{array: string, boolean: string, function: string, number: string, object: string, string: string}}
- */
-var tags = {
-    "array": '[object Array]',
-    "boolean": '[object Boolean]',
-    "function": '[object Function]',
-    "number": '[object Number]',
-    "object": '[object Object]',
-    "string": '[object String]'
-};
-
-/**
- * @param type
- * @param value
- * @returns {boolean}
- */
-function is (type, value) {
-    if (type === 'undefined') {
-        return value === undefined;
-    }
-    if (!tags[type]) {
-        throw new Error('Cannot check type ' + type);
-    }
-    return Object.prototype.toString.call(value) === tags[type];
-}
-
-},{"../protocol.json":2}],2:[function(require,module,exports){
-module.exports={
-    "version": { "major": "1", "minor": "0" },
-    "domains": [{
-        "domain": "Global",
-        "description": "",
-        "types": [
-            {
-                "id": "NodeId",
-                "type": "integer",
-                "description": "Unique DOM node identifier."
-            }
-        ],
-        "commands": [
-            {
-                "name": "reload",
-                "parameters": [
-                    { "name": "hard",  "type": "boolean", "description": "Instruct the browser to re-fetch data" }
-                ],
-                "description": "Inform all browsers to perform a reload."
-            },
-            {
-                "name": "inject",
-                "parameters": [
-                    { "name": "file", "type": "object", "description": "File info for injecting", "properties": [
-                        { "name": "basename", "type": "string", "description": "Basename of file" },
-                        { "name": "path",     "type": "string", "description": "Path from CWD" },
-                        { "name": "ext",      "type": "string", "description": "File extension without the dot" },
-                        { "name": "item",     "type": "object", "properties": [
-                                { "name": "locator", "type": "object", "optional": true, "description": "Serialized Regex", "properties": [
-                                        { "name": "source",     "type": "string", "description":  "Regex Source" },
-                                        { "name": "global",     "type": "boolean", "description": "`global` Regex Flag" },
-                                        { "name": "ignoreCase", "type": "boolean", "description": "`ignoreCase` Regex Flag" },
-                                        { "name": "multiline",  "type": "boolean", "description": "`multiline` Regex Flag" }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]}
-                ],
-                "description": "Inform all browsers to the replace the url of an asset to force a reload"
-            }
-        ]
-    },{
-        "domain": "Options",
-        "description": "",
-        "types": [],
-        "commands": [
-            {
-                "name": "set",
-                "parameters": [
-                    { "name": "id",       "type": "string", "description": "Where to set the options - default or to a specific client?" },
-                    { "name": "options",  "type": "object", "description": "The sub-set of options to override on the client" }
-                ],
-                "description": "Update options on a client"
-            }
-        ]
-    },{
-        "domain": "Client",
-        "description": "",
-        "types": [
-            {
-                "id": "Client",
-                "type": "Object",
-                "description": "Unique DOM node identifier."
-            }
-        ],
-        "commands": [
-            {
-                "name": "register",
-                "parameters": [
-                    { "name": "client", "type": "object", "description": "Client information", "properties": [
-                        { "name": "id", "type": "string", "description": "Per tab, Per session id for a client" }
-                    ]},
-                    { "name": "data", "type": "object", "optional": true, "description": "Any additional data to send on register" }
-                ],
-                "description": "register a client with an id"
-            },
-            {
-                "name": "heartbeat",
-                "parameters": [
-                    { "name": "client", "type": "object", "description": "Client information", "properties": [
-                        { "name": "id", "type": "string", "description": "Per tab, Per session heartbeat for a client" }
-                    ]},
-                    { "name": "data", "type": "object", "optional": true, "description": "Any additional data to send on register" }
-                ],
-                "description": "Send a heartbeat from a client"
-            }
-        ]
-    }
-    ]
-}
-
-},{}],3:[function(require,module,exports){
 "use strict";
 
-var socket  = require("./socket");
-var emitter = require("./emitter");
-var notify  = require("./notify");
-var utils   = require("./browser.utils");
-var merge   = require("lodash.merge");
-var objGet  = require("lodash.get");
-var storage = require("./store");
-var protocol = require('/Users/shakyshane/code/browser-sync-core-rewrite/lib/protocol.js');
+var socket   = require("./socket");
+var emitter  = require("./emitter");
+var notify   = require("./notify");
+var utils    = require("./browser.utils");
+var merge    = require("lodash.merge");
+var objGet   = require("lodash.get");
+var storage  = require("./store");
 
 /**
  * @constructor
@@ -301,6 +21,8 @@ var BrowserSync = function (options) {
     this.store   = storage.create(options.sessionId);
     var _this    = this;
 
+    var bs = this;
+
     if (!this.store.get('client')) {
         this.store.set('client', {
             id: this.socket.socket.id
@@ -308,24 +30,20 @@ var BrowserSync = function (options) {
     }
 
     var currentId = this.store.get('client.id');
-    var outgoing  = protocol.validate('Client.register', this.store.get('client'));
 
-    socket.emit(outgoing.payload.path, outgoing.payload.args);
+    socket.emit('Client.register', {
+        client: bs.store.get('client'),
+        data: {
+            sessionId: options.sessionId,
+            socketId: bs.socket.socket.id
+        }
+    });
+
     socket.on('Options.set', function (data) {
         if (data.id === currentId) {
             console.log('received', data.options);
             merge(_this.options, data.options);
         }
-    });
-
-    var hb = protocol.validate('Client.heartbeat', this.store.get('client'));
-
-    setInterval(function () {
-        socket.emit(hb.payload.path, hb.payload.args);
-    }, 5000);
-
-    socket.on('reconnect', function () {
-        socket.emit(hb.payload.path, hb.payload.args);
     });
 };
 
@@ -364,7 +82,8 @@ BrowserSync.prototype.getOption = function (path) {
  * @type {Function}
  */
 module.exports = BrowserSync;
-},{"./browser.utils":4,"./emitter":7,"./notify":18,"./socket":19,"./store":20,"/Users/shakyshane/code/browser-sync-core-rewrite/lib/protocol.js":1,"lodash.get":21,"lodash.merge":25}],4:[function(require,module,exports){
+
+},{"./browser.utils":2,"./emitter":5,"./notify":16,"./socket":17,"./store":18,"lodash.get":19,"lodash.merge":23}],2:[function(require,module,exports){
 "use strict";
 
 var utils = exports;
@@ -520,7 +239,7 @@ utils.forEach = function (coll, fn) {
 utils.isOldIe = function () {
     return typeof utils.getWindow().attachEvent !== "undefined";
 };
-},{}],5:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
 
     Array.prototype.indexOf= function(find, i) {
@@ -541,7 +260,7 @@ if (!("indexOf" in Array.prototype)) {
         return -1;
     };
 }
-},{}],6:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 var events  = require("./events");
 var utils   = require("./browser.utils");
@@ -812,7 +531,7 @@ sync.reloadBrowser = function (confirm) {
         utils.reloadBrowser();
     }
 };
-},{"./browser.utils":4,"./emitter":7,"./events":8}],7:[function(require,module,exports){
+},{"./browser.utils":2,"./emitter":5,"./events":6}],5:[function(require,module,exports){
 "use strict";
 
 exports.events = {};
@@ -846,7 +565,7 @@ exports.on = function (name, func) {
         events[name].listeners.push(func);
     }
 };
-},{}],8:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 exports._ElementCache = function () {
 
     var cache = {},
@@ -1127,7 +846,7 @@ exports.manager = eventManager;
 
 
 
-},{}],9:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1194,7 +913,7 @@ exports.socketEvent = function (bs, eventManager) {
         }
     };
 };
-},{}],10:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1263,7 +982,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],11:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 exports.plugins = {
@@ -1299,7 +1018,7 @@ exports.init = function (bs, eventManager) {
         }
     }
 };
-},{"./ghostmode.forms.input":10,"./ghostmode.forms.submit":12,"./ghostmode.forms.toggles":13}],12:[function(require,module,exports){
+},{"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11}],10:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1365,7 +1084,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],13:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1461,7 +1180,7 @@ exports.socketEvent = function (bs) {
         return false;
     };
 };
-},{}],14:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 var eventManager = require("./events").manager;
@@ -1482,7 +1201,7 @@ exports.init = function (bs) {
         exports.plugins[name].init(bs, eventManager);
     }
 };
-},{"./events":8,"./ghostmode.clicks":9,"./ghostmode.forms":11,"./ghostmode.location":15,"./ghostmode.scroll":16}],15:[function(require,module,exports){
+},{"./events":6,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1532,7 +1251,7 @@ exports.setUrl = function (url) {
 exports.setPath = function (path) {
     window.location = window.location.protocol + "//" + window.location.host + path;
 };
-},{}],16:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1706,7 +1425,7 @@ exports.getScrollTopPercentage = function (pos) {
     var percentage  = exports.getScrollPercentage(scrollSpace, pos);
     return percentage.y;
 };
-},{}],17:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
 var socket       = require("./socket");
@@ -1784,7 +1503,7 @@ if (window.__karma__) {
     window.__bs_index__      = exports;
 }
 /**debug:end**/
-},{"./browser-sync":3,"./browser.utils":4,"./client-shims":5,"./code-sync":6,"./emitter":7,"./events":8,"./ghostmode":14,"./ghostmode.clicks":9,"./ghostmode.forms":11,"./ghostmode.forms.input":10,"./ghostmode.forms.submit":12,"./ghostmode.forms.toggles":13,"./ghostmode.location":15,"./ghostmode.scroll":16,"./notify":18,"./socket":19}],18:[function(require,module,exports){
+},{"./browser-sync":1,"./browser.utils":2,"./client-shims":3,"./code-sync":4,"./emitter":5,"./events":6,"./ghostmode":12,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.forms.input":8,"./ghostmode.forms.submit":10,"./ghostmode.forms.toggles":11,"./ghostmode.location":13,"./ghostmode.scroll":14,"./notify":16,"./socket":17}],16:[function(require,module,exports){
 "use strict";
 
 var scroll = require("./ghostmode.scroll");
@@ -1893,7 +1612,7 @@ exports.flash = function (message, timeout) {
 
     return elem;
 };
-},{"./ghostmode.scroll":16}],19:[function(require,module,exports){
+},{"./ghostmode.scroll":14}],17:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1934,7 +1653,7 @@ exports.emit = function (name, data) {
 exports.on = function (name, func) {
     exports.socket.on(name, func);
 };
-},{}],20:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var utils    = require('./browser.utils');
 var $window  = utils.getWindow();
 var merge    = require("lodash.merge");
@@ -2016,7 +1735,7 @@ function create (id) {
 }
 
 module.exports.create = create;
-},{"./browser.utils":4,"lodash.get":21,"lodash.merge":25,"lodash.set":42}],21:[function(require,module,exports){
+},{"./browser.utils":2,"lodash.get":19,"lodash.merge":23,"lodash.set":40}],19:[function(require,module,exports){
 /**
  * lodash 3.7.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2059,7 +1778,7 @@ function get(object, path, defaultValue) {
 
 module.exports = get;
 
-},{"lodash._baseget":22,"lodash._topath":23}],22:[function(require,module,exports){
+},{"lodash._baseget":20,"lodash._topath":21}],20:[function(require,module,exports){
 /**
  * lodash 3.7.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2135,7 +1854,7 @@ function isObject(value) {
 
 module.exports = baseGet;
 
-},{}],23:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /**
  * lodash 3.8.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2184,7 +1903,7 @@ function toPath(value) {
 
 module.exports = toPath;
 
-},{"lodash.isarray":24}],24:[function(require,module,exports){
+},{"lodash.isarray":22}],22:[function(require,module,exports){
 /**
  * lodash 3.0.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2366,7 +2085,7 @@ function isNative(value) {
 
 module.exports = isArray;
 
-},{}],25:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * lodash 3.3.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2634,7 +2353,7 @@ var merge = createAssigner(baseMerge);
 
 module.exports = merge;
 
-},{"lodash._arraycopy":26,"lodash._arrayeach":27,"lodash._createassigner":28,"lodash.isarguments":33,"lodash.isarray":34,"lodash.isplainobject":35,"lodash.istypedarray":37,"lodash.keys":38,"lodash.toplainobject":40}],26:[function(require,module,exports){
+},{"lodash._arraycopy":24,"lodash._arrayeach":25,"lodash._createassigner":26,"lodash.isarguments":31,"lodash.isarray":32,"lodash.isplainobject":33,"lodash.istypedarray":35,"lodash.keys":36,"lodash.toplainobject":38}],24:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2665,7 +2384,7 @@ function arrayCopy(source, array) {
 
 module.exports = arrayCopy;
 
-},{}],27:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2698,7 +2417,7 @@ function arrayEach(array, iteratee) {
 
 module.exports = arrayEach;
 
-},{}],28:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * lodash 3.1.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2752,7 +2471,7 @@ function createAssigner(assigner) {
 
 module.exports = createAssigner;
 
-},{"lodash._bindcallback":29,"lodash._isiterateecall":30,"lodash.restparam":31}],29:[function(require,module,exports){
+},{"lodash._bindcallback":27,"lodash._isiterateecall":28,"lodash.restparam":29}],27:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2819,7 +2538,7 @@ function identity(value) {
 
 module.exports = bindCallback;
 
-},{}],30:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /**
  * lodash 3.0.9 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2953,7 +2672,7 @@ function isObject(value) {
 
 module.exports = isIterateeCall;
 
-},{}],31:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /**
  * lodash 3.6.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3022,7 +2741,7 @@ function restParam(func, start) {
 
 module.exports = restParam;
 
-},{}],32:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /**
  * lodash 3.9.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3161,7 +2880,7 @@ function isNative(value) {
 
 module.exports = getNative;
 
-},{}],33:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /**
  * lodash 3.0.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3269,9 +2988,9 @@ function isArguments(value) {
 
 module.exports = isArguments;
 
-},{}],34:[function(require,module,exports){
-arguments[4][24][0].apply(exports,arguments)
-},{"dup":24}],35:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
+arguments[4][22][0].apply(exports,arguments)
+},{"dup":22}],33:[function(require,module,exports){
 /**
  * lodash 3.2.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3376,7 +3095,7 @@ function isPlainObject(value) {
 
 module.exports = isPlainObject;
 
-},{"lodash._basefor":36,"lodash.isarguments":33,"lodash.keysin":39}],36:[function(require,module,exports){
+},{"lodash._basefor":34,"lodash.isarguments":31,"lodash.keysin":37}],34:[function(require,module,exports){
 /**
  * lodash 3.0.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3464,7 +3183,7 @@ function isObject(value) {
 
 module.exports = baseFor;
 
-},{}],37:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /**
  * lodash 3.0.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3576,7 +3295,7 @@ function isTypedArray(value) {
 
 module.exports = isTypedArray;
 
-},{}],38:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /**
  * lodash 3.1.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3814,7 +3533,7 @@ function keysIn(object) {
 
 module.exports = keys;
 
-},{"lodash._getnative":32,"lodash.isarguments":33,"lodash.isarray":34}],39:[function(require,module,exports){
+},{"lodash._getnative":30,"lodash.isarguments":31,"lodash.isarray":32}],37:[function(require,module,exports){
 /**
  * lodash 3.0.8 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3948,7 +3667,7 @@ function keysIn(object) {
 
 module.exports = keysIn;
 
-},{"lodash.isarguments":33,"lodash.isarray":34}],40:[function(require,module,exports){
+},{"lodash.isarguments":31,"lodash.isarray":32}],38:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3989,7 +3708,7 @@ function toPlainObject(value) {
 
 module.exports = toPlainObject;
 
-},{"lodash._basecopy":41,"lodash.keysin":39}],41:[function(require,module,exports){
+},{"lodash._basecopy":39,"lodash.keysin":37}],39:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4023,7 +3742,7 @@ function baseCopy(source, props, object) {
 
 module.exports = baseCopy;
 
-},{}],42:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /**
  * lodash 3.7.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4171,8 +3890,8 @@ function set(object, path, value) {
 
 module.exports = set;
 
-},{"lodash._topath":43,"lodash.isarray":44}],43:[function(require,module,exports){
-arguments[4][23][0].apply(exports,arguments)
-},{"dup":23,"lodash.isarray":44}],44:[function(require,module,exports){
-arguments[4][24][0].apply(exports,arguments)
-},{"dup":24}]},{},[17]);
+},{"lodash._topath":41,"lodash.isarray":42}],41:[function(require,module,exports){
+arguments[4][21][0].apply(exports,arguments)
+},{"dup":21,"lodash.isarray":42}],42:[function(require,module,exports){
+arguments[4][22][0].apply(exports,arguments)
+},{"dup":22}]},{},[15]);
