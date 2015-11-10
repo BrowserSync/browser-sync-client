@@ -10,7 +10,7 @@ describe("The Notify Element", function() {
         var expected = "rgb(27, 32, 50)";
         assert.equal(actual, expected);
     });
-    it("can be initialised with custom styles", function() {
+    it("can be initialised with custom styles array", function() {
 
         bs.options.notify = {
             styles: [
@@ -30,6 +30,23 @@ describe("The Notify Element", function() {
         var expected = "yellow";
         assert.equal(actual, expected);
     });
+    it("can be initialised with custom style overrides", function() {
+
+        bs.options.notify = {
+            styles: {
+                fontSize: "18px",
+                backgroundColor: "plum"
+            }
+        };
+        var elem     = notify.init(bs);
+        var actualFontSize   = elem.style.fontSize;
+        var expectedFontSize = "18px";
+        var actualBGColor   = elem.style.backgroundColor;
+        var expectedBGColor = "plum";
+        assert.equal(actualFontSize, expectedFontSize);
+        assert.equal(actualBGColor, expectedBGColor);
+    });
+
 
     it("can return a callback for watching", function(){
         var stub = sinon.stub(notify, "flash");
