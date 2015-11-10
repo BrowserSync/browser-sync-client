@@ -34,7 +34,7 @@ describe("The scroll Plugin", function () {
     });
     it("socketEvent(): 1", function () {
         var stub = sinon.stub(window, "scrollTo");
-        scroll.socketEvent(bs)({position: {raw: 100}});
+        scroll.socketEvent(bs)({position: {raw: {x: 0, y:100}}});
         sinon.assert.calledWithExactly(stub, 0, 100);
         stub.restore();
     });
@@ -68,7 +68,10 @@ describe("The scroll Plugin", function () {
         before(function () {
             stub   = sinon.stub(scroll, "getScrollPosition").returns({
                 proportional: 0.5,
-                raw: 100
+                raw: {
+                    x: 0,
+                    y: 100
+                }
             });
         });
         afterEach(function () {
@@ -86,7 +89,10 @@ describe("The scroll Plugin", function () {
             sinon.assert.calledWithExactly(spy, "scroll", {
                 position: {
                     proportional: 0.5,
-                    raw: 100
+                    raw: {
+                        x: 0,
+                        y: 100
+                    }
                 }
             });
         });
