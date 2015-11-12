@@ -31,20 +31,7 @@ var BrowserSync = function (options) {
 
     var currentId = this.store.get('client.id');
 
-    socket.emit('Client.register', {
-        client: bs.store.get('client'),
-        data: {
-            sessionId: options.sessionId,
-            socketId: bs.socket.socket.id,
-            browser: {
-                scroll: utils.getBrowserScrollPosition(),
-                dimensions: {
-                    width:  document.documentElement.scrollWidth,
-                    height: document.documentElement.scrollHeight
-                }
-            }
-        }
-    });
+    bs.register();
 
     socket.on('Options.set', function (data) {
         if (data.id === currentId) {
@@ -54,8 +41,51 @@ var BrowserSync = function (options) {
     });
 
     socket.on('reconnect', function () {
-        window.location.reload(true);
-    })
+        utils.reloadBrowser();
+    });
+
+    var resizing = false;
+    var timeout  = 1000;
+    var int;
+
+    utils.getWindow().addEventListener('resize', function () {
+        if (!resizing) {
+            resizing = true;
+            int = setTimeout(function () {
+                resizing = false;
+                clearTimeout(int);
+                bs.register();
+            }, timeout);
+        }
+    });
+};
+
+/**
+ *
+ */
+BrowserSync.prototype.register = function () {
+
+    var bs = this;
+    var options = this.options;
+
+    /**
+     * As per protocol, send 'client' + optional data
+     */
+    socket.emit('Client.register', {
+        client: bs.store.get('client'),
+        data: {
+            hash: utils.getWindow().location.hash,
+            sessionId: options.sessionId,
+            socketId:  bs.socket.socket.id,
+            browser: {
+                scroll: utils.getBrowserScrollPosition(),
+                dimensions: {
+                    width:  utils.getDocument().documentElement.scrollWidth,
+                    height: utils.getDocument().documentElement.scrollHeight
+                }
+            }
+        }
+    });
 };
 
 /**
@@ -98,6 +128,7 @@ module.exports = BrowserSync;
 "use strict";
 
 var utils = exports;
+var emitter = require('./emitter');
 
 /**
  * @returns {window}
@@ -229,6 +260,7 @@ utils.setScroll = function (pos) {
  * Hard reload
  */
 utils.reloadBrowser = function () {
+    emitter.emit("browser:hardReload");
     utils.getWindow().location.reload(true);
 };
 
@@ -250,7 +282,8 @@ utils.forEach = function (coll, fn) {
 utils.isOldIe = function () {
     return typeof utils.getWindow().attachEvent !== "undefined";
 };
-},{}],3:[function(require,module,exports){
+
+},{"./emitter":5}],3:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
 
     Array.prototype.indexOf= function(find, i) {
@@ -537,11 +570,11 @@ sync.getElems = function(fileExtension) {
  * @param confirm
  */
 sync.reloadBrowser = function (confirm) {
-    emitter.emit("browser:hardReload");
     if (confirm) {
         utils.reloadBrowser();
     }
 };
+
 },{"./browser.utils":2,"./emitter":5,"./events":6}],5:[function(require,module,exports){
 "use strict";
 
