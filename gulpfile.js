@@ -59,7 +59,7 @@ gulp.task("dist", ["build-dist"], function () {
         .pipe(gulp.dest("./dist"));
 });
 
-gulp.task("dev", ["build-dist"], function () {
+gulp.task("dev", ["dist"], function () {
     gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ["dist"]);
 });
 
