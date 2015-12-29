@@ -441,12 +441,19 @@ sync.swapFile = function (elem, attr, options) {
 
     var currentValue = elem[attr];
     var timeStamp = new Date().getTime();
-    var suffix = "?rel=" + timeStamp;
+    var suffix = "rel=" + timeStamp;
 
+    var justParams = sync.getParamsOnly(currentValue);
     var justUrl = sync.getFilenameOnly(currentValue);
 
     if (justUrl) {
         currentValue = justUrl[0];
+    }
+
+    if (justParams !== "") {
+        suffix = justParams[justParams.length -1] === "&" ? suffix : "&" + suffix;
+    } else {
+        suffix = "?" + suffix;
     }
 
     if (options) {
@@ -455,7 +462,7 @@ sync.swapFile = function (elem, attr, options) {
         }
     }
 
-    elem[attr] = currentValue + suffix;
+    elem[attr] = currentValue + justParams + suffix;
 
     var body = document.body;
 
@@ -473,6 +480,11 @@ sync.swapFile = function (elem, attr, options) {
         elem: elem,
         timeStamp: timeStamp
     };
+};
+
+sync.getParamsOnly = function (url) {
+    var buf = url.match(/[(\?|\&)]([^=]+)\=([^&#]+)/g);
+    return buf ? buf.join("").replace(/rel=([0-9]+)/g, "").replace("&&", "&") : "";
 };
 
 sync.getFilenameOnly = function (url) {
@@ -584,6 +596,7 @@ sync.reloadBrowser = function (confirm) {
         utils.reloadBrowser();
     }
 };
+
 },{"./browser.utils":2,"./emitter":5,"./events":6}],5:[function(require,module,exports){
 "use strict";
 
