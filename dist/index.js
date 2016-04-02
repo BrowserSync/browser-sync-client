@@ -276,6 +276,46 @@ utils.forEach = function (coll, fn) {
 utils.isOldIe = function () {
     return typeof utils.getWindow().attachEvent !== "undefined";
 };
+
+
+/**
+ * Split the URL information
+ * @returns {object}
+ */
+utils.getLocation = function (url) {
+    var location = utils.getDocument().createElement("a");
+    location.href = url;
+
+    if (location.host === "") {
+        location.href = location.href;
+    }
+
+    return location;
+};
+
+/**
+ * Remove a param from URL
+ * http://stackoverflow.com/questions/16941104/remove-a-parameter-to-the-url-with-javascript
+ * @returns {object}
+ */
+utils.removeParam = function (key, url) {
+    var rtn = url.split("?")[0],
+        param,
+        params_arr = [],
+        queryString = (url.indexOf("?") !== -1) ? url.split("?")[1] : "";
+    if (queryString !== "") {
+        params_arr = queryString.split("&");
+        for (var i = params_arr.length - 1; i >= 0; i -= 1) {
+            param = params_arr[i].split("=")[0];
+            if (param === key) {
+                params_arr.splice(i, 1);
+            }
+        }
+        rtn = rtn + "?" + params_arr.join("&");
+    }
+    return rtn;
+};
+
 },{}],3:[function(require,module,exports){
 if (!("indexOf" in Array.prototype)) {
 
@@ -437,55 +477,53 @@ sync.saveScrollInCookie = function ($window, $document) {
  * @param options
  * @returns {{elem: HTMLElement, timeStamp: number}}
  */
-sync.swapFile = function (elem, attr, options) {
+ sync.swapFile = function (elem, attr, options) {
 
-    var currentValue = elem[attr];
-    var timeStamp = new Date().getTime();
-    var suffix = "rel=" + timeStamp;
+     var currentValue = elem[attr];
+     var timeStamp = new Date().getTime();
+     var suffix = "rel=" + timeStamp;
 
-    var justParams = sync.getParamsOnly(currentValue);
-    var justUrl = sync.getFilenameOnly(currentValue);
+     var justParams = utils.getLocation(currentValue).search;
+     var justUrl = sync.getFilenameOnly(currentValue);
 
-    if (justUrl) {
-        currentValue = justUrl[0];
-    }
+     // removing the rel param
+     justParams = utils.removeParam("rel", justParams);
 
-    if (justParams !== "") {
-        suffix = justParams[justParams.length -1] === "&" ? suffix : "&" + suffix;
-    } else {
-        suffix = "?" + suffix;
-    }
+     if (justUrl) {
+         currentValue = justUrl[0];
+     }
 
-    if (options) {
-        if (!options.timestamps) {
-            suffix = "";
-        }
-    }
+     if (justParams !== "") {
+         suffix = justParams[justParams.length -1] === "&" ? suffix : "&" + suffix;
+     } else {
+         suffix = "?" + suffix;
+     }
 
-    elem[attr] = currentValue + justParams + suffix;
+     if (options) {
+         if (!options.timestamps) {
+             suffix = "";
+         }
+     }
 
-    var body = document.body;
+     elem[attr] = currentValue + justParams + suffix;
 
-    setTimeout(function () {
-        if (!hiddenElem) {
-            hiddenElem = document.createElement("DIV");
-            body.appendChild(hiddenElem);
-        } else {
-            hiddenElem.style.display = "none";
-            hiddenElem.style.display = "block";
-        }
-    }, 200);
+     var body = document.body;
 
-    return {
-        elem: elem,
-        timeStamp: timeStamp
-    };
-};
+     setTimeout(function () {
+         if (!hiddenElem) {
+             hiddenElem = document.createElement("DIV");
+             body.appendChild(hiddenElem);
+         } else {
+             hiddenElem.style.display = "none";
+             hiddenElem.style.display = "block";
+         }
+     }, 200);
 
-sync.getParamsOnly = function (url) {
-    var buf = url.match(/[(\?|\&)]([^=]+)\=([^&#]+)/g);
-    return buf ? buf.join("").replace(/rel=([0-9]+)/g, "").replace("&&", "&") : "";
-};
+     return {
+         elem: elem,
+         timeStamp: timeStamp
+     };
+ };
 
 sync.getFilenameOnly = function (url) {
     return /^[^\?]+(?=\?)/.exec(url);
