@@ -25,7 +25,7 @@ describe("Code Sync", function () {
         reloadStub.restore();
     });
 
-    describe("reload()", function () {
+    describe("reload() with css files", function () {
 
         var dataStub;
         var reloadStub;
@@ -55,6 +55,63 @@ describe("Code Sync", function () {
             assert.equal(actual.elem.id, "match1");
             matchesStub.restore();
             elemsStub.restore();
+        });
+        it("swaps url when css file has existing params", function () {
+            var matches = [
+                {
+                    attr: "href",
+                    id: "match1",
+                    href: "http://localhost.com/css/styles.css?name=kittie&id=||"
+                }
+            ];
+            var clock = sinon.useFakeTimers();
+            clock.tick(100);
+            var elemsStub = sinon.stub(codeSync, "getElems").returns({elems: matches, attr: "href"});
+            var matchesStub = sinon.stub(codeSync, "getMatches").returns(matches);
+            var reload = codeSync.reload(bs);
+            var actual = reload(dataStub);
+            assert.equal(actual.elem.href, "http://localhost.com/css/styles.css?name=kittie&id=||&rel=100", "Should append rel attribute");
+            matchesStub.restore();
+            elemsStub.restore();
+            clock.restore();
+        });
+        it("swaps url when css file has no params", function () {
+            var matches = [
+                {
+                    attr: "href",
+                    id: "match1",
+                    href: "http://localhost.com/css/styles.css"
+                }
+            ];
+            var clock = sinon.useFakeTimers();
+            clock.tick(100);
+            var elemsStub = sinon.stub(codeSync, "getElems").returns({elems: matches, attr: "href"});
+            var matchesStub = sinon.stub(codeSync, "getMatches").returns(matches);
+            var reload = codeSync.reload(bs);
+            var actual = reload(dataStub);
+            assert.equal(actual.elem.href, "http://localhost.com/css/styles.css?rel=100", "Should append rel attribute");
+            matchesStub.restore();
+            elemsStub.restore();
+            clock.restore();
+        });
+        it("swaps url when css file has exising rel attr", function () {
+            var matches = [
+                {
+                    attr: "href",
+                    id: "match1",
+                    href: "http://localhost.com/css/styles.css?rel=99"
+                }
+            ];
+            var clock = sinon.useFakeTimers();
+            clock.tick(100);
+            var elemsStub = sinon.stub(codeSync, "getElems").returns({elems: matches, attr: "href"});
+            var matchesStub = sinon.stub(codeSync, "getMatches").returns(matches);
+            var reload = codeSync.reload(bs);
+            var actual = reload(dataStub);
+            assert.equal(actual.elem.href, "http://localhost.com/css/styles.css?rel=100", "Should append rel attribute");
+            matchesStub.restore();
+            elemsStub.restore();
+            clock.restore();
         });
     });
     describe("reloading the browser", function () {
