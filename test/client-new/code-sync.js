@@ -160,7 +160,10 @@ describe("Code Sync", function () {
 
     describe("matching elements", function () {
 
-        var stubs = [
+        var stubs;
+
+        beforeEach(function() {
+            stubs = [
             {
                 id: "stub1",
                 href: "http://localhost:8080/style.css"
@@ -174,6 +177,8 @@ describe("Code Sync", function () {
                 href: "http://localhost:8080/stee/erqq/qefrerf/erferf/style-with-paths.css"
             }
         ];
+
+        });
 
         it("can return multiple elements", function () {
             var matches = codeSync.getMatches(stubs, "*", "href");
