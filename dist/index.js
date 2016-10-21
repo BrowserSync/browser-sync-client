@@ -712,9 +712,10 @@ sync.getMatches = function (elems, url, attr) {
     }
 
     var matches = [];
+    var urlMatcher = new RegExp("(^|/)" + url);
 
     for (var i = 0, len = elems.length; i < len; i += 1) {
-        if (elems[i][attr].indexOf(url) !== -1) {
+        if (urlMatcher.test(elems[i][attr])) {
             matches.push(elems[i]);
         }
     }

@@ -30,6 +30,7 @@
   },
   "scripts": {
     "test": "gulp && npm run mocha && npm run karma",
+    "test-local": "gulp && npm run mocha && karma start test/karma.conf.js",
     "mocha": "mocha test/middleware",
     "karma": "karma start test/karma.conf.ci.js"
   },
