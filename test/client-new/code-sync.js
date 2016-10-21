@@ -216,18 +216,17 @@ describe("Code Sync", function () {
             assert.equal(matches.length, 2);
         });
         it("can return only elements matching the same name: 1", function () {
-            stubs.push({
+            var elems = [{
                 id: "stub4",
                 href: "http://localhost:8080/test-style.css"
             },
             {
                 id: "stub5",
                 href: "style.css"
-            });
-            var matches = codeSync.getMatches(stubs, "style.css", "href");
-            assert.equal(matches[0].id, "stub1");
-            assert.equal(matches[1].id, "stub5");
-            assert.equal(matches.length, 2);
+            }];
+            var matches = codeSync.getMatches(elems, "style.css", "href");
+            assert.equal(matches[0].id, "stub5");
+            assert.equal(matches.length, 1);
         });
     });
     describe("Getting elements", function () {
