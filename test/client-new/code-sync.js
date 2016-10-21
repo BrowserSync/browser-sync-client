@@ -160,7 +160,10 @@ describe("Code Sync", function () {
 
     describe("matching elements", function () {
 
-        var stubs = [
+        var stubs;
+
+        beforeEach(function() {
+            stubs = [
             {
                 id: "stub1",
                 href: "http://localhost:8080/style.css"
@@ -174,6 +177,8 @@ describe("Code Sync", function () {
                 href: "http://localhost:8080/stee/erqq/qefrerf/erferf/style-with-paths.css"
             }
         ];
+
+        });
 
         it("can return multiple elements", function () {
             var matches = codeSync.getMatches(stubs, "*", "href");
@@ -208,6 +213,20 @@ describe("Code Sync", function () {
             var matches = codeSync.getMatches(stubs, "style.css", "href");
             assert.equal(matches[0].id, "stub1");
             assert.equal(matches[1].id, "stub4");
+            assert.equal(matches.length, 2);
+        });
+        it("can return only elements matching the same name: 1", function () {
+            stubs.push({
+                id: "stub4",
+                href: "http://localhost:8080/test-style.css"
+            },
+            {
+                id: "stub5",
+                href: "style.css"
+            });
+            var matches = codeSync.getMatches(stubs, "style.css", "href");
+            assert.equal(matches[0].id, "stub1");
+            assert.equal(matches[1].id, "stub5");
             assert.equal(matches.length, 2);
         });
     });
