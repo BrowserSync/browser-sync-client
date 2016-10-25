@@ -2,6 +2,20 @@ describe("Code Sync", function () {
     var codeSync;
     var bs;
     var socketSpy;
+    var stubs = [
+        {
+            id: "stub1",
+            href: "http://localhost:8080/style.css"
+        },
+        {
+            id: "stub2",
+            href: "http://localhost:8080/style-with-rel.css?rel=213456"
+        },
+        {
+            id: "stub3",
+            href: "http://localhost:8080/stee/erqq/qefrerf/erferf/style-with-paths.css"
+        }
+    ];
 
     before(function () {
         bs = window.__bs_stub__;
@@ -160,26 +174,6 @@ describe("Code Sync", function () {
 
     describe("matching elements", function () {
 
-        var stubs;
-
-        beforeEach(function() {
-            stubs = [
-            {
-                id: "stub1",
-                href: "http://localhost:8080/style.css"
-            },
-            {
-                id: "stub2",
-                href: "http://localhost:8080/style-with-rel.css?rel=213456"
-            },
-            {
-                id: "stub3",
-                href: "http://localhost:8080/stee/erqq/qefrerf/erferf/style-with-paths.css"
-            }
-        ];
-
-        });
-
         it("can return multiple elements", function () {
             var matches = codeSync.getMatches(stubs, "*", "href");
             assert.equal(matches.length, 3);
@@ -206,27 +200,29 @@ describe("Code Sync", function () {
             assert.equal(matches.length, 1);
         });
         it("can return Multiple element matches: 1", function () {
-            stubs.push({
+            var elems = stubs.concat({
                 id: "stub4",
                 href: "http://localhost:8080/style.css"
             });
-            var matches = codeSync.getMatches(stubs, "style.css", "href");
+            var matches = codeSync.getMatches(elems, "style.css", "href");
             assert.equal(matches[0].id, "stub1");
             assert.equal(matches[1].id, "stub4");
             assert.equal(matches.length, 2);
         });
         it("can return only elements matching the same name: 1", function () {
-            var elems = [{
+            var elems = stubs.concat({
                 id: "stub4",
                 href: "http://localhost:8080/test-style.css"
             },
             {
                 id: "stub5",
                 href: "style.css"
-            }];
+            });
             var matches = codeSync.getMatches(elems, "style.css", "href");
-            assert.equal(matches[0].id, "stub5");
-            assert.equal(matches.length, 1);
+            console.log(matches);
+            assert.equal(matches[0].id, "stub1");
+            assert.equal(matches[1].id, "stub5");
+            assert.equal(matches.length, 2);
         });
     });
     describe("Getting elements", function () {
