@@ -1741,7 +1741,8 @@ var styles = {
     backgroundColor: "#1B2032",
     margin: 0,
     color: "white",
-    textAlign: "center"
+    textAlign: "center",
+    pointerEvents: "none"
 };
 
 var elem;
@@ -1846,6 +1847,7 @@ exports.flash = function (message, timeout) {
 
     return elem;
 };
+
 },{"./browser.utils":2,"./ghostmode.scroll":14}],17:[function(require,module,exports){
 "use strict";
 
