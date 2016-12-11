@@ -1417,7 +1417,9 @@ exports.plugins = {
  */
 exports.init = function (bs) {
     for (var name in exports.plugins) {
-        exports.plugins[name].init(bs, eventManager);
+        if (bs.options.ghostMode[name]) {
+            exports.plugins[name].init(bs, eventManager);
+        }
     }
 };
 },{"./events":6,"./ghostmode.clicks":7,"./ghostmode.forms":9,"./ghostmode.location":13,"./ghostmode.scroll":14}],13:[function(require,module,exports){
