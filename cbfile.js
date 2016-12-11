@@ -1,4 +1,5 @@
-var gulp       = require("gulp");
+var cb         = require("crossbow");
+var vfs         = require("vinyl-fs");
 var jshint     = require("gulp-jshint");
 var uglify     = require("gulp-uglify");
 var contribs   = require("gulp-contribs");
@@ -7,24 +8,24 @@ var rename     = require("gulp-rename");
 var browserify = require("browserify");
 var source     = require("vinyl-source-stream");
 
-gulp.task("lint-test", function () {
-    return gulp.src(["test/client-new/*.js", "test/middleware/*.js", "gulpfile.js"])
+cb.task("lint-test", function lintTest() {
+    return vfs.src(["test/client-new/*.js", "test/middleware/*.js", "cbfile.js"])
         .pipe(jshint("test/.jshintrc"))
         .pipe(jshint.reporter("default"))
         .pipe(jshint.reporter("fail"));
 });
 
-gulp.task("lint-lib", function () {
-    return gulp.src(["lib/*", "!lib/browser-sync-client.js", "!lib/events.js", "!lib/client-shims.js"])
+cb.task("lint-lib", function lintLib() {
+    return vfs.src(["lib/*", "!lib/browser-sync-client.js", "!lib/events.js", "!lib/client-shims.js"])
         .pipe(jshint("lib/.jshintrc"))
         .pipe(jshint.reporter("default"))
         .pipe(jshint.reporter("fail"));
 });
 
-gulp.task("contribs", function () {
-    return gulp.src("README.md")
+cb.task("contribs", function contribs() {
+    return vfs.src("README.md")
         .pipe(contribs())
-        .pipe(gulp.dest("./"));
+        .pipe(vfs.dest("./"));
 });
 
 /**
@@ -44,25 +45,31 @@ var stripDebug = function () {
     });
 };
 
-gulp.task("build-dist", function() {
+cb.task("bundle", function() {
     return browserify("./lib/index.js")
         .bundle()
         .pipe(source("index.js"))
-        .pipe(gulp.dest("./dist"));
+        .pipe(vfs.dest("./dist"));
 });
 
-gulp.task("dist", ["build-dist"], function () {
-    return gulp.src(["dist/index.js"])
+cb.task("minify", function() {
+    return vfs.src(["dist/index.js"])
         .pipe(stripDebug())
-        .pipe(uglify())
         .pipe(rename("index.min.js"))
-        .pipe(gulp.dest("./dist"));
+        .pipe(uglify())
+        .pipe(vfs.dest("./dist"));
 });
 
-gulp.task("dev", ["build-dist"], function () {
-    gulp.watch(["lib/*.js", "test/client-new/**/*.js"], ["dist"]);
+cb.task("build-all", ["bundle", "minify"]);
+
+cb.task("dev", ["build-all"], function () {
+    cb.watch(["lib/*.js", "test/client-new/**/*.js"], ["build-all"]);
 });
 
-gulp.task("default", ["lint-lib", "lint-test", "build-dist"]);
+cb.task("default", ["lint-lib", "lint-test", "build-all"]);
 
-gulp.task("build", ["dist"]);
+cb.task("test", [
+    "default",
+    "@npm mocha test/middleware",
+    "@npm karma start test/karma.conf.ci.js"
+]);
