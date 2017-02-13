@@ -36,7 +36,7 @@
     "browser-sync": "^2.9.11",
     "browserify": "^11.2.0",
     "chai": "~1.9.0",
-    "crossbow": "^3.6.16",
+    "crossbow": "latest",
     "express": "^4.12.3",
     "gulp-contribs": "0.0.2",
     "gulp-jshint": "~1.4.0",

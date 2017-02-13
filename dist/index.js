@@ -1798,7 +1798,7 @@ exports.init = function (bs) {
  */
 exports.watchEvent = function (bs) {
     return function (data) {
-        if (bs.options.notify) {
+        if (bs.options.notify || data.override) {
             if (typeof data === "string") {
                 return exports.flash(data);
             }

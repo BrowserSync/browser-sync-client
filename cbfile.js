@@ -45,14 +45,14 @@ var stripDebug = function () {
     });
 };
 
-cb.task("bundle", function() {
+cb.task("bundle", function bundle() {
     return browserify("./lib/index.js")
         .bundle()
         .pipe(source("index.js"))
         .pipe(vfs.dest("./dist"));
 });
 
-cb.task("minify", function() {
+cb.task("minify", function minify() {
     return vfs.src(["dist/index.js"])
         .pipe(stripDebug())
         .pipe(rename("index.min.js"))
@@ -62,14 +62,25 @@ cb.task("minify", function() {
 
 cb.task("build-all", ["bundle", "minify"]);
 
-cb.task("dev", ["build-all"], function () {
-    cb.watch(["lib/*.js", "test/client-new/**/*.js"], ["build-all"]);
+cb.task("dev", {
+    description: "Build-all & then watch for changes",
+    tasks: [
+        "build-all",
+        function () {
+            cb.watch(["lib/*.js", "test/client-new/**/*.js"], ["build-all"], {block: true});
+        }
+    ]
 });
 
 cb.task("default", ["lint-lib", "lint-test", "build-all"]);
 
+cb.group("karma", {
+    watch: "@npm karma start test/karma.conf.js",
+    unit: "@npm karma start test/karma.conf.ci.js"
+});
+
 cb.task("test", [
     "default",
     "@npm mocha test/middleware",
-    "@npm karma start test/karma.conf.ci.js"
+    "karma:unit"
 ]);
