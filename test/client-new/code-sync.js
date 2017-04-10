@@ -219,7 +219,6 @@ describe("Code Sync", function () {
                 href: "style.css"
             });
             var matches = codeSync.getMatches(elems, "style.css", "href");
-            console.log(matches);
             assert.equal(matches[0].id, "stub1");
             assert.equal(matches[1].id, "stub5");
             assert.equal(matches.length, 2);

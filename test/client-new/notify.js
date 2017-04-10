@@ -56,6 +56,22 @@ describe("The Notify Element", function() {
         stub.restore();
     });
 
+    it("does not flash a message if notify:false", function(){
+        var stub = sinon.stub(notify, "flash");
+        var cb   = notify.watchEvent({options: {notify:false}});
+        cb({message: "custom message"});
+        sinon.assert.notCalled(stub);
+        stub.restore();
+    });
+
+    it("DOES flash a message if notify:false but override: true", function(){
+        var stub = sinon.stub(notify, "flash");
+        var cb   = notify.watchEvent({options: {notify:false}});
+        cb({message: "custom message", override: true});
+        sinon.assert.calledWithExactly(stub, "custom message", undefined);
+        stub.restore();
+    });
+
     it("should register an listener on the emitter", function () {
         var spy = sinon.spy(bs.emitter, "on");
         notify.init(bs);
