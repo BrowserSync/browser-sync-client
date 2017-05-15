@@ -70,6 +70,21 @@ describe("Code Sync", function () {
             matchesStub.restore();
             elemsStub.restore();
         });
+      it("ignores an event if blacklisted", function() {
+        var reload = codeSync.reload(bs);
+        var dataStub = {
+          path: "css/styles/styles.css.map",
+          basename: "styles.css.map",
+          ext: "map",
+          type: "reload",
+          log: true
+        };
+        var elemsStub = sinon.stub(codeSync, "getElems");
+        var actual = reload(dataStub);
+        elemsStub.restore();
+        assert.equal(actual, undefined);
+        assert.equal(elemsStub.called, false);
+      });
         it("swaps url when css file has existing params", function () {
             var matches = [
                 {

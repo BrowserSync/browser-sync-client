@@ -461,7 +461,13 @@ var options = {
         "link":   "href",
         "img":    "src",
         "script": "src"
-    }
+    },
+    blacklist: [
+        // never allow .map files through
+        function(incoming) {
+            return incoming.ext === "map";
+        }
+    ]
 };
 
 var hiddenElem;
@@ -746,6 +752,10 @@ sync.reload = function (bs) {
 
         if (data.basename && data.ext) {
 
+            if (sync.isBlacklisted(data)) {
+                return;
+            }
+
             var domData = sync.getElems(data.ext);
             var elems   = sync.getMatches(domData.elems, data.basename, domData.attr);
 
@@ -776,6 +786,16 @@ sync.getTagName = function (fileExtension) {
  */
 sync.getAttr = function (tagName) {
     return options.attrs[tagName];
+};
+
+/**
+ * @param incoming
+ * @returns {boolean}
+ */
+sync.isBlacklisted = function (incoming) {
+    return options.blacklist.some(function(fn) {
+        return fn(incoming);
+    });
 };
 
 /**
