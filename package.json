@@ -30,7 +30,8 @@
   },
   "scripts": {
     "start": "cb dev",
-    "test": "cb test"
+    "test": "cb test",
+    "prepublish": "cb run default"
   },
   "devDependencies": {
     "browser-sync": "^2.9.11",
