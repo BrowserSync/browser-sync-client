@@ -613,6 +613,7 @@ sync.updateSearch = function(search, key, suffix) {
  * @returns {{elem: HTMLElement, timeStamp: number}}
  */
 sync.swapFile = function (elem, attr, options) {
+
     var currentValue = elem[attr];
     var timeStamp    = new Date().getTime();
     var key          = "rel";
